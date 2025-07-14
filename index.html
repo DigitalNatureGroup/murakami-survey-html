@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>NASA-TLX 芳賀版 評価フォーム</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    form { max-width: 420px; }
+    .item { margin: 12px 0; }
+    .item label { font-weight: bold; }
+    .slider-value { margin-left: 8px; font-weight: bold; }
+    button { margin-right: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>NASA-TLX 芳賀版 作業負荷評価フォーム</h2>
+
+<form id="tlxForm">
+  <!-- ID入力 -->
+  <div class="item">
+    <label for="userID">参加者ID:</label><br>
+    <input type="text" id="userID" name="userID" required>
+  </div>
+
+  <!-- 各評価スライダー -->
+  <div class="item">
+    <label for="mental">精神的要求 (Mental Demand):</label><br>
+    <input type="range" id="mental" name="mental" min="0" max="100" value="50">
+    <span id="mentalValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="physical">身体的要求 (Physical Demand):</label><br>
+    <input type="range" id="physical" name="physical" min="0" max="100" value="50">
+    <span id="physicalValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="temporal">時間的要求 (Temporal Demand):</label><br>
+    <input type="range" id="temporal" name="temporal" min="0" max="100" value="50">
+    <span id="temporalValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="performance">作業成績 (Performance):</label><br>
+    <input type="range" id="performance" name="performance" min="0" max="100" value="50">
+    <span id="performanceValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="effort">努力 (Effort):</label><br>
+    <input type="range" id="effort" name="effort" min="0" max="100" value="50">
+    <span id="effortValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="frustration">欲求不満 (Frustration):</label><br>
+    <input type="range" id="frustration" name="frustration" min="0" max="100" value="50">
+    <span id="frustrationValue" class="slider-value">50</span>
+  </div>
+  <div class="item">
+    <label for="overall">全体的負荷 (Overall Workload):</label><br>
+    <input type="range" id="overall" name="overall" min="0" max="100" value="50">
+    <span id="overallValue" class="slider-value">50</span>
+  </div>
+
+  <!-- 送信 & リセットボタン -->
+  <button type="submit">結果をダウンロード</button>
+  <button type="button" id="resetBtn">リセット</button>
+</form>
+
+<script>
+  // スライダー値リアルタイム表示
+  const sliders = document.querySelectorAll('input[type="range"]');
+  sliders.forEach(slider => {
+    slider.addEventListener('input', () => {
+      document.getElementById(slider.id + 'Value').textContent = slider.value;
+    });
+  });
+
+  // CSV生成・ダウンロード
+  document.getElementById('tlxForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const id  = document.getElementById('userID').value.trim();
+    const vals = [
+      id,
+      document.getElementById('mental').value,
+      document.getElementById('physical').value,
+      document.getElementById('temporal').value,
+      document.getElementById('performance').value,
+      document.getElementById('effort').value,
+      document.getElementById('frustration').value,
+      document.getElementById('overall').value
+    ];
+
+    const headers = ["ID","精神的要求","身体的要求","時間的要求","作業成績",
+                     "努力","欲求不満","全体的負荷"];
+    const csv = headers.join(",") + "\r\n" + vals.join(",");
+
+    // UTF-8 BOM付与でExcel文字化け防止
+    const bom  = new Uint8Array([0xEF,0xBB,0xBF]);
+    const blob = new Blob([bom, csv], { type: "text/csv" });
+
+    const a = document.createElement('a');
+    a.download = (id ? id : "result") + ".csv";
+    a.href = URL.createObjectURL(blob);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  });
+
+  // リセット（確認ダイアログ付き）
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!confirm('入力をリセットしてもよろしいですか？')) return;
+    document.getElementById('tlxForm').reset();
+    sliders.forEach(slider => {
+      document.getElementById(slider.id + 'Value').textContent = slider.value;
+    });
+  });
+</script>
+
+</body>
+</html>
