@@ -1,133 +1,194 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>NASA-TLX JP 芳賀版 作業負荷評価フォーム</title>
-  <style>
-    body   { font-family: sans-serif; margin: 24px; line-height: 1.6; }
-    h2     { margin-bottom: 8px; }
-    form   { max-width: 450px; }
-    .item  { margin: 16px 0; }
-    .item label { font-weight: bold; display:block; margin-bottom:4px; }
+<meta charset="UTF-8">
+<title>NASA-TLX 芳賀版 作業負荷評価フォーム</title>
+<style>
+  /* 基本レイアウト */
+  body   { font-family: sans-serif; margin: 24px; line-height: 1.6; }
+  h2     { margin-bottom: 8px; }
+  form   { max-width: 480px; }
+  .item  { margin: 18px 0; }
 
-    /* スライダーを長めに */
-    input[type="range"] { width: 100%; max-width: 360px; }
+  /* 項目ラベル（太字） */
+  .item label { font-weight: bold; display: block; margin-bottom: 4px; }
 
-    /* アンカー（小さい↔大きい 等）表示 */
-    .anchors { display: flex; justify-content: space-between; font-size: 0.85em; margin-top: 2px; }
-    .anchors span { color: #555; }
+  /* 説明文を細く小さく */
+  .item label .desc{
+    font-weight: normal;
+    font-size: 0.85em;
+    color: #666;
+    line-height: 1.4;
+    display: block;
+    margin-top: 2px;
+  }
 
-    /* ボタン類 */
-    button { padding: 6px 14px; font-size: 1em; margin-right: 12px; cursor: pointer; }
-    #resetBtn { background: #e74c3c; color: #fff; border: none; }   /* ← リセットを赤に */
-    #resetBtn:hover { background:#c0392b; }
+  /* スライダーをやや長めに */
+  input[type="range"]{ width: 100%; max-width: 480px; }
 
-    /* 小さな注記や文献 */
-    .note { font-size: 0.85em; color:#555; margin-top: 30px; }
-  </style>
+  /* アンカー（小さい↔大きい 等）表示 */
+  .anchors{
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    margin-top: 2px;
+    color: #555;
+  }
+
+  /* ボタン類 */
+  button{ padding: 6px 14px; font-size: 1em; margin-right: 12px; cursor: pointer; }
+  #resetBtn{ background: #e74c3c; color: #fff; border: none; }
+  #resetBtn:hover{ background: #c0392b; }
+
+  /* 注記・文献 */
+  .note{ font-size: 0.85em; color: #555; margin-top: 28px; }
+</style>
 </head>
 <body>
 
 <h2>NASA-TLX 芳賀版 作業負荷評価フォーム</h2>
 <p class="note">
-  ※ 各スライダーは左側が<strong>弱い / 小さい / 良い</strong>、右側が<strong>強い / 大きい / 悪い</strong>を表します（芳賀・水上, 1996 の表 1 に準拠）。
+  各スライダーは左が<strong>弱い／小さい／短い／良い</strong>，
+  右が<strong>強い／大きい／長い／悪い</strong>などを示します
+  （芳賀・水上，1996 表１準拠）。
 </p>
 
 <form id="tlxForm">
-  <!-- ID入力 -->
+  <!-- ID -->
   <div class="item">
-    <label for="userID">参加者ID</label>
+    <label for="userID">参加者 ID</label>
     <input type="text" id="userID" name="userID" required>
   </div>
 
   <!-- 精神的要求 -->
   <div class="item">
-    <label for="mental">精神的要求 (Mental Demand)</label>
+    <label for="mental">
+      精神的要求 (Mental Demand)
+      <span class="desc">
+        どの程度の知的・知覚的活動（考える、決める、計算する、記憶する，見るなど）を必要としましたか.課題はやさしかったですか難しかったですか. 単純でしたか複雑でしたか,正確さが求められましたか, 大ざっぱでよかったですか.
+      </span>
+    </label>
     <input type="range" id="mental" name="mental" min="0" max="100" value="50">
     <div class="anchors"><span>小さい</span><span>大きい</span></div>
   </div>
 
   <!-- 身体的要求 -->
   <div class="item">
-    <label for="physical">身体的要求 (Physical Demand)</label>
+    <label for="physical">
+      身体的要求 (Physical Demand)
+      <span class="desc">
+        どの程度の身体的活動（押す、引く、回す、制倒する、動き回るなど）を必要としましたか.作業はラクでしたかキツかったですか、ゆっくりできましたかキビキビやらなければなりませんでしたか、休み休みできましたか働きづめでしたか.
+      </span>
+    </label>
     <input type="range" id="physical" name="physical" min="0" max="100" value="50">
     <div class="anchors"><span>小さい</span><span>大きい</span></div>
   </div>
 
   <!-- 時間的要求 -->
   <div class="item">
-    <label for="temporal">時間的要求 (Temporal Demand)</label>
+    <label for="temporal">
+      時間的要求 (Temporal Demand)
+      <span class="desc">
+        仕事のペースや課題が発生する頻度のために感じる時間的切迫感はどの程度でしたか. ペースはゆっくりとして余裕があるものでしたか, それとも速くて余裕のないものでしたか.
+      </span>
+    </label>
     <input type="range" id="temporal" name="temporal" min="0" max="100" value="50">
     <div class="anchors"><span>短い</span><span>長い</span></div>
   </div>
 
   <!-- 作業成績 -->
   <div class="item">
-    <label for="performance">作業成績 (Performance)</label>
+    <label for="performance">
+      作業成績 (Performance)
+      <span class="desc">
+        作業指示者（またはあなた自身）によって設定された課題の目標をどの程度達成できたと思いますか. 目標の達成に関して自分の作業成績にどの程度満足していますか.
+      </span>
+    </label>
     <input type="range" id="performance" name="performance" min="0" max="100" value="50">
     <div class="anchors"><span>良い</span><span>悪い</span></div>
   </div>
 
   <!-- 努力 -->
   <div class="item">
-    <label for="effort">努力 (Effort)</label>
+    <label for="effort">
+      努力 (Effort)
+      <span class="desc">
+        作業成績のレベルを達成・維持するために, 精神的・身体的にどの程度いっしょうけんめいに作業しなけれはなりませんでしたか.
+      </span>
+    </label>
     <input type="range" id="effort" name="effort" min="0" max="100" value="50">
     <div class="anchors"><span>少ない</span><span>多い</span></div>
   </div>
 
   <!-- 欲求不満 -->
   <div class="item">
-    <label for="frustration">欲求不満 (Frustration)</label>
+    <label for="frustration">
+      欲求不満 (Frustration)
+      <span class="desc">
+        作業中に、不安感、落胆、いらいら、ストレス、悩みをどの程度感じましたか. あるいは逆に、安心感、満足感、充足感、楽しさ、リラックスをどの程度感じましたか.
+      </span>
+    </label>
     <input type="range" id="frustration" name="frustration" min="0" max="100" value="50">
     <div class="anchors"><span>低い</span><span>高い</span></div>
   </div>
 
   <!-- 全体的負荷 -->
   <div class="item">
-    <label for="overall">全体的負荷 (Overall Workload)</label>
+    <label for="overall">
+      全体的負荷 (Overall Workload)
+      <span class="desc">
+        さまざまな負荷要因，負荷原因. 部分部分の課題内容を総合すると、全体としてどの程度の作業負担を感じましたか.
+      </span>
+    </label>
     <input type="range" id="overall" name="overall" min="0" max="100" value="50">
     <div class="anchors"><span>低い</span><span>高い</span></div>
   </div>
 
   <!-- ボタン -->
-  <button type="submit">結果をダウンロード(CSV)</button>
+  <button type="submit">結果をダウンロード</button>
   <button type="button" id="resetBtn">リセット</button>
 </form>
 
 <!-- 参考文献 -->
 <p class="note">
   参考文献：<br>
-  （1）芳賀 繁・水上 洋介（1996）「日本語版 NASA-TLX によるメンタルワークロード測定」<em>産業・組織心理学研究</em>, 10(2).<br>
-  （2）Hart, S. G. &amp; Staveland, L. E. (1988) “Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research.” In <em>Human Mental Workload</em>.
+  芳賀 繁・水上 洋介（1996）
+  「日本語版 NASA-TLX によるメンタルワークロード測定」
+  『産業・組織心理学研究』10(2).<br>
+  Hart, S. G. &amp; Staveland, L. E. (1988)
+  “Development of NASA-TLX (Task Load Index).” In
+  <em>Human Mental Workload</em>.
 </p>
 
 <script>
-  // CSV生成・ダウンロード
-  document.getElementById('tlxForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+  /* CSV生成・ダウンロード */
+  document.getElementById('tlxForm').addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    const id  = document.getElementById('userID').value.trim();
+    const id   = document.getElementById('userID').value.trim();
     const vals = [
       id,
-      mental.value,
-      physical.value,
-      temporal.value,
-      performance.value,
-      effort.value,
-      frustration.value,
-      overall.value
+      document.getElementById('mental').value,
+      document.getElementById('physical').value,
+      document.getElementById('temporal').value,
+      document.getElementById('performance').value,
+      document.getElementById('effort').value,
+      document.getElementById('frustration').value,
+      document.getElementById('overall').value
     ];
 
-    const headers = ["ID","精神的要求","身体的要求","時間的要求","作業成績",
-                     "努力","欲求不満","全体的負荷"];
+    const headers = [
+      "ID","精神的要求","身体的要求","時間的要求",
+      "作業成績","努力","欲求不満","全体的負荷"
+    ];
     const csv = headers.join(",") + "\r\n" + vals.join(",");
 
-    // Excel対策: UTF-8 BOMを付与
+    /* UTF-8 BOM 付きで Excel 文字化け防止 */
     const bom  = new Uint8Array([0xEF,0xBB,0xBF]);
     const blob = new Blob([bom, csv], { type: "text/csv" });
 
     const a = document.createElement('a');
-    a.download = (id ? id : "result") + ".csv";
+    a.download = (id || "result") + ".csv";
     a.href = URL.createObjectURL(blob);
     document.body.appendChild(a);
     a.click();
@@ -135,10 +196,11 @@
     URL.revokeObjectURL(a.href);
   });
 
-  // リセット（確認付き）
+  /* リセット（確認付き） */
   document.getElementById('resetBtn').addEventListener('click', () => {
-    if (!confirm('入力をリセットしてもよろしいですか？')) return;
-    document.getElementById('tlxForm').reset();
+    if (confirm('入力をリセットしてもよろしいですか？')) {
+      document.getElementById('tlxForm').reset();
+    }
   });
 </script>
 
