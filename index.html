@@ -2,99 +2,127 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>NASA-TLX 芳賀版 評価フォーム</title>
+  <title>NASA-TLX JP 芳賀版 作業負荷評価フォーム</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    form { max-width: 420px; }
-    .item { margin: 12px 0; }
-    .item label { font-weight: bold; }
-    .slider-value { margin-left: 8px; font-weight: bold; }
-    button { margin-right: 10px; }
+    body   { font-family: sans-serif; margin: 24px; line-height: 1.6; }
+    h2     { margin-bottom: 8px; }
+    form   { max-width: 450px; }
+    .item  { margin: 16px 0; }
+    .item label { font-weight: bold; display:block; margin-bottom:4px; }
+
+    /* スライダーを長めに */
+    input[type="range"] { width: 100%; max-width: 360px; }
+
+    /* アンカー（小さい↔大きい 等）表示 */
+    .anchors { display: flex; justify-content: space-between; font-size: 0.85em; margin-top: 2px; }
+    .anchors span { color: #555; }
+
+    /* ボタン類 */
+    button { padding: 6px 14px; font-size: 1em; margin-right: 12px; cursor: pointer; }
+    #resetBtn { background: #e74c3c; color: #fff; border: none; }   /* ← リセットを赤に */
+    #resetBtn:hover { background:#c0392b; }
+
+    /* 小さな注記や文献 */
+    .note { font-size: 0.85em; color:#555; margin-top: 30px; }
   </style>
 </head>
 <body>
 
 <h2>NASA-TLX 芳賀版 作業負荷評価フォーム</h2>
+<p class="note">
+  ※ 各スライダーは左側が<strong>弱い / 小さい / 良い</strong>、右側が<strong>強い / 大きい / 悪い</strong>を表します（芳賀・水上, 1996 の表 1 に準拠）。
+</p>
 
 <form id="tlxForm">
   <!-- ID入力 -->
   <div class="item">
-    <label for="userID">参加者ID:</label><br>
+    <label for="userID">参加者ID</label>
     <input type="text" id="userID" name="userID" required>
   </div>
 
-  <!-- 各評価スライダー -->
+  <!-- 精神的要求 -->
   <div class="item">
-    <label for="mental">精神的要求 (Mental Demand):</label><br>
+    <label for="mental">精神的要求 (Mental Demand)</label>
     <input type="range" id="mental" name="mental" min="0" max="100" value="50">
-    <span id="mentalValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="physical">身体的要求 (Physical Demand):</label><br>
-    <input type="range" id="physical" name="physical" min="0" max="100" value="50">
-    <span id="physicalValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="temporal">時間的要求 (Temporal Demand):</label><br>
-    <input type="range" id="temporal" name="temporal" min="0" max="100" value="50">
-    <span id="temporalValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="performance">作業成績 (Performance):</label><br>
-    <input type="range" id="performance" name="performance" min="0" max="100" value="50">
-    <span id="performanceValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="effort">努力 (Effort):</label><br>
-    <input type="range" id="effort" name="effort" min="0" max="100" value="50">
-    <span id="effortValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="frustration">欲求不満 (Frustration):</label><br>
-    <input type="range" id="frustration" name="frustration" min="0" max="100" value="50">
-    <span id="frustrationValue" class="slider-value">50</span>
-  </div>
-  <div class="item">
-    <label for="overall">全体的負荷 (Overall Workload):</label><br>
-    <input type="range" id="overall" name="overall" min="0" max="100" value="50">
-    <span id="overallValue" class="slider-value">50</span>
+    <div class="anchors"><span>小さい</span><span>大きい</span></div>
   </div>
 
-  <!-- 送信 & リセットボタン -->
-  <button type="submit">結果をダウンロード</button>
+  <!-- 身体的要求 -->
+  <div class="item">
+    <label for="physical">身体的要求 (Physical Demand)</label>
+    <input type="range" id="physical" name="physical" min="0" max="100" value="50">
+    <div class="anchors"><span>小さい</span><span>大きい</span></div>
+  </div>
+
+  <!-- 時間的要求 -->
+  <div class="item">
+    <label for="temporal">時間的要求 (Temporal Demand)</label>
+    <input type="range" id="temporal" name="temporal" min="0" max="100" value="50">
+    <div class="anchors"><span>短い</span><span>長い</span></div>
+  </div>
+
+  <!-- 作業成績 -->
+  <div class="item">
+    <label for="performance">作業成績 (Performance)</label>
+    <input type="range" id="performance" name="performance" min="0" max="100" value="50">
+    <div class="anchors"><span>良い</span><span>悪い</span></div>
+  </div>
+
+  <!-- 努力 -->
+  <div class="item">
+    <label for="effort">努力 (Effort)</label>
+    <input type="range" id="effort" name="effort" min="0" max="100" value="50">
+    <div class="anchors"><span>少ない</span><span>多い</span></div>
+  </div>
+
+  <!-- 欲求不満 -->
+  <div class="item">
+    <label for="frustration">欲求不満 (Frustration)</label>
+    <input type="range" id="frustration" name="frustration" min="0" max="100" value="50">
+    <div class="anchors"><span>低い</span><span>高い</span></div>
+  </div>
+
+  <!-- 全体的負荷 -->
+  <div class="item">
+    <label for="overall">全体的負荷 (Overall Workload)</label>
+    <input type="range" id="overall" name="overall" min="0" max="100" value="50">
+    <div class="anchors"><span>低い</span><span>高い</span></div>
+  </div>
+
+  <!-- ボタン -->
+  <button type="submit">結果をダウンロード(CSV)</button>
   <button type="button" id="resetBtn">リセット</button>
 </form>
 
-<script>
-  // スライダー値リアルタイム表示
-  const sliders = document.querySelectorAll('input[type="range"]');
-  sliders.forEach(slider => {
-    slider.addEventListener('input', () => {
-      document.getElementById(slider.id + 'Value').textContent = slider.value;
-    });
-  });
+<!-- 参考文献 -->
+<p class="note">
+  参考文献：<br>
+  （1）芳賀 繁・水上 洋介（1996）「日本語版 NASA-TLX によるメンタルワークロード測定」<em>産業・組織心理学研究</em>, 10(2).<br>
+  （2）Hart, S. G. &amp; Staveland, L. E. (1988) “Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research.” In <em>Human Mental Workload</em>.
+</p>
 
+<script>
   // CSV生成・ダウンロード
-  document.getElementById('tlxForm').addEventListener('submit', function(event) {
+  document.getElementById('tlxForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
     const id  = document.getElementById('userID').value.trim();
     const vals = [
       id,
-      document.getElementById('mental').value,
-      document.getElementById('physical').value,
-      document.getElementById('temporal').value,
-      document.getElementById('performance').value,
-      document.getElementById('effort').value,
-      document.getElementById('frustration').value,
-      document.getElementById('overall').value
+      mental.value,
+      physical.value,
+      temporal.value,
+      performance.value,
+      effort.value,
+      frustration.value,
+      overall.value
     ];
 
     const headers = ["ID","精神的要求","身体的要求","時間的要求","作業成績",
                      "努力","欲求不満","全体的負荷"];
     const csv = headers.join(",") + "\r\n" + vals.join(",");
 
-    // UTF-8 BOM付与でExcel文字化け防止
+    // Excel対策: UTF-8 BOMを付与
     const bom  = new Uint8Array([0xEF,0xBB,0xBF]);
     const blob = new Blob([bom, csv], { type: "text/csv" });
 
@@ -107,13 +135,10 @@
     URL.revokeObjectURL(a.href);
   });
 
-  // リセット（確認ダイアログ付き）
+  // リセット（確認付き）
   document.getElementById('resetBtn').addEventListener('click', () => {
     if (!confirm('入力をリセットしてもよろしいですか？')) return;
     document.getElementById('tlxForm').reset();
-    sliders.forEach(slider => {
-      document.getElementById(slider.id + 'Value').textContent = slider.value;
-    });
   });
 </script>
 
