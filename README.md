@@ -1,136 +1,196 @@
-# Survey System
+# 村上サーベイシステム
 
-複数のサーベイセットを管理できるWebアプリケーションです。
+複数のサーベイコンポーネントを組み合わせて表示できるWebベースのサーベイシステムです。
 
 ## 機能
 
-- 複数のサーベイセットの管理（セット1、セット2）
+- 複数のサーベイセットを動的に読み込み
 - URLパラメータによる条件分岐
 - Google Apps Script (GAS) を通じたGoogle Spreadsheetへのデータ保存
-- レスポンシブデザイン
+- サーバーサイドプロキシによるCORS回避
 
-## セット構成
+## セットアップ
 
-### セット1 (condition=interval)
-- NASA-TLX 作業負荷評価
-- SUS システム使用性評価  
-- オリジナル調査
-
-### セット2 (condition=finish)
-- 最終調査
-
-## 使用方法
-
-### 1. ローカルサーバーの起動
+### 1. 依存関係のインストール
 
 ```bash
 npm install
+```
+
+### 2. 環境変数の設定
+
+`.env` ファイルを作成し、GASのエンドポイントURLを設定してください：
+
+```bash
+cp env.example .env
+```
+
+`.env` ファイルを編集：
+```
+GAS_URL=https://script.google.com/macros/s/YOUR_GAS_SCRIPT_ID/exec
+PORT=3000
+```
+
+### 3. サーバーの起動
+
+```bash
 npm start
 ```
 
-### 2. URLパラメータ
+または開発モード：
+```bash
+npm run dev
+```
 
-以下のパラメータを含むURLでアクセスしてください：
+静的ファイルのみで起動する場合：
+```bash
+npm run static
+```
 
+## 使用方法
+
+### URLパラメータ
+
+サーベイにアクセスする際は以下のURLパラメータを指定してください：
+
+- `uid`: ユーザーID（数字）
+- `condition`: 条件（"interval" または "finish"）
+- `method`: 手法（"manual", "humbird", "bo", "cma"）
+
+例：
 ```
 http://localhost:3000/?uid=123&condition=interval&method=manual
 ```
 
-**パラメータ説明：**
-- `uid`: 参加者ID（数字）
-- `condition`: 条件（"interval" または "finish"）
-- `method`: 手法（"manual", "humbird", "bo", "cma"）
+### サーベイセット
 
-### 3. GASの設定
+現在利用可能なサーベイセット：
 
-1. Google Apps Scriptで新しいプロジェクトを作成
-2. `gas-sample-code.gs`の内容をコピー
-3. スプレッドシートIDを設定
-4. Webアプリケーションとしてデプロイ
-5. 生成されたURLを`js/survey-config.js`の`GAS_ENDPOINT`に設定
+1. **セット1**: NASA-TLX + SUS + オリジナルサーベイ
+2. **セット2**: 最終サーベイ
+
+セットは `js/survey-config.js` で定義されています。
 
 ## ファイル構成
 
 ```
-├── index.html          # メインHTMLファイル
-├── package.json        # Node.js設定
+├── index.html              # メインHTMLファイル
+├── server.js               # Express.jsサーバー
+├── package.json            # 依存関係とスクリプト
+├── .env                    # 環境変数（要作成）
+├── env.example             # 環境変数テンプレート
 ├── js/
-│   ├── survey-config.js    # セット設定（個別ファイルからインポート）
-│   ├── survey-manager.js    # サーベイ管理クラス（export形式）
-│   └── main.js            # メインアプリケーション（import集約）
-├── surveys/            # 個別アンケートファイル
-│   ├── nasa-tlx.js        # NASA-TLX アンケート
-│   ├── sus.js             # SUS アンケート
-│   ├── original.js        # オリジナル調査
-│   ├── last-survey.js     # 最終調査
-│   └── choice-survey.js   # 選択肢形式アンケート例
-└── gas-sample-code.gs     # GASサンプルコード
+│   ├── main.js             # メインアプリケーション
+│   ├── survey-config.js    # サーベイ設定
+│   ├── survey-manager.js   # サーベイ管理
+│   ├── gas-config.js       # GAS設定
+│   └── gas-sender.js       # GAS送信処理
+└── surveys/
+    ├── nasa-tlx.js         # NASA-TLXサーベイ
+    ├── sus.js              # SUSサーベイ
+    ├── original.js         # オリジナルサーベイ
+    ├── last-survey.js      # 最終サーベイ
+    └── choice-survey.js    # 選択式サーベイ例
 ```
 
-## アンケートの追加・変更方法
+## サーベイの追加方法
 
-### 新しいアンケートの追加
+### 1. 新しいサーベイファイルの作成
 
-1. `surveys/`ディレクトリに新しいファイルを作成
-2. アンケートの定義を記述
-3. `js/survey-config.js`でインポートしてセットに追加
+`surveys/` ディレクトリに新しいサーベイファイルを作成：
 
-例：
 ```javascript
-// surveys/new-survey.js
-export const newSurvey = {
-    id: "new-survey",
-    title: "新しいアンケート",
-    description: "説明文",
+// surveys/my-survey.js
+export const mySurvey = {
+    id: 'my-survey',
+    title: 'マイサーベイ',
     questions: [
         {
-            id: "question1",
-            label: "質問1",
-            type: "range", // range, text, radio, select
-            min: 1,
-            max: 5,
-            defaultValue: 3,
-            anchors: ["低い", "高い"]
+            id: 'q1',
+            type: 'slider',
+            text: '質問1',
+            min: 0,
+            max: 100,
+            default: 50
+        },
+        {
+            id: 'q2',
+            type: 'radio',
+            text: '質問2',
+            options: ['選択肢1', '選択肢2', '選択肢3']
         }
     ]
 };
 ```
 
-4. `js/survey-config.js`でインポートしてセットに追加：
+### 2. サーベイ設定への追加
+
+`js/survey-config.js` でサーベイをインポートし、セットに追加：
+
 ```javascript
-import { newSurvey } from '../surveys/new-survey.js';
+import { mySurvey } from '../surveys/my-survey.js';
 
 export const SURVEY_SETS = {
-    "set1": {
-        name: "セット1",
-        surveys: [
-            nasaTlxSurvey,
-            newSurvey, // 新しいアンケートを追加
-            susSurvey
-        ]
-    }
+    'set1': [nasaTlxSurvey, susSurvey, mySurvey],
+    'set2': [lastSurvey]
 };
 ```
 
-## データ形式
+## サポートされている質問タイプ
 
-送信されるデータの形式：
+- **slider**: スライダー（数値入力）
+- **radio**: ラジオボタン（単一選択）
+- **select**: セレクトボックス（単一選択）
 
-```json
-{
-  "userInfo": {
-    "uid": "123",
-    "condition": "interval",
-    "method": "manual",
-    "setKey": "set1"
-  },
-  "results": {
-    "nasa-tlx": {
-      "mental": "50",
-      "physical": "30",
-      "temporal": "40"
-    }
-  },
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
+## GAS設定
+
+### 1. Google Apps Scriptの作成
+
+1. [Google Apps Script](https://script.google.com/) にアクセス
+2. 新しいプロジェクトを作成
+3. `gas-sample-code.gs` の内容をコピー
+4. スプレッドシートIDを設定
+5. デプロイしてWebアプリとして公開
+
+### 2. フロントエンド設定
+
+`js/gas-config.js` でGASのエンドポイントURLを設定：
+
+```javascript
+export const GAS_CONFIG = {
+    ENDPOINT: "YOUR_GAS_ENDPOINT_URL",
+    // ...
+};
 ```
+
+## アーキテクチャ
+
+### サーバーサイドプロキシ
+
+- **フロントエンド**: `fetch('/api/submit')` でサーバーに送信
+- **サーバー**: Express.jsがGASにプロキシ転送
+- **GAS**: データを受信してスプレッドシートに保存
+
+この方式により、CORS問題を完全に回避できます。
+
+## 開発
+
+### ログの確認
+
+サーバーのログで送信状況を確認できます：
+
+```bash
+npm start
+```
+
+### ヘルスチェック
+
+サーバーの状態確認：
+
+```
+GET /api/health
+```
+
+## ライセンス
+
+MIT License

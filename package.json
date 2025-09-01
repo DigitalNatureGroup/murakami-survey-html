@@ -2,10 +2,17 @@
   "name": "murakami-survey-html",
   "version": "1.0.0",
   "description": "Survey system with multiple survey sets",
-  "main": "index.html",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "npx http-server -p 3000",
-    "dev": "npx http-server -p 3000 -c-1"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "static": "npx http-server -p 3000 -c-1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"

@@ -2,6 +2,7 @@ console.log('ACTIVE main.js @', new Date().toISOString());
 // すべてのインポートを集約
 import { SurveyManager } from './survey-manager.js';
 import { SURVEY_SETS, GAS_ENDPOINT } from './survey-config.js';
+import { GASSender } from './gas-sender.js';
 
 // グローバル変数として設定（他のモジュールから参照可能にするため）
 window.SURVEY_SETS = SURVEY_SETS;
@@ -13,6 +14,7 @@ console.log('main.js: すべてのインポート完了');
 export class SurveyApp {
     constructor() {
         this.surveyManager = new SurveyManager();
+        this.gasSender = new GASSender();
         this.init();
     }
 
@@ -232,26 +234,43 @@ export class SurveyApp {
         try {
             // 送信ボタンを無効化
             const submitBtn = document.getElementById('submit-btn');
+            const backBtn = document.getElementById('back-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            
             submitBtn.disabled = true;
             submitBtn.textContent = '送信中...';
+            backBtn.disabled = true;
+            resetBtn.disabled = true;
+
+            // 送信データを取得
+            const data = this.surveyManager.getAllResults();
+            console.log('送信データ:', data);
 
             // GASに送信
-            await this.surveyManager.submitToGAS();
+            const result = await this.gasSender.submitData(data);
+            console.log('送信結果:', result);
 
             // 成功メッセージを表示
             this.showSuccess('結果が正常に送信されました。ご協力ありがとうございました。');
 
             // ボタンを非表示
             submitBtn.style.display = 'none';
-            document.getElementById('reset-btn').style.display = 'none';
+            backBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
 
         } catch (error) {
+            console.error('GAS送信エラー:', error);
             this.showError('送信に失敗しました: ' + error.message);
             
             // ボタンを再有効化
             const submitBtn = document.getElementById('submit-btn');
+            const backBtn = document.getElementById('back-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            
             submitBtn.disabled = false;
             submitBtn.textContent = '結果を送信';
+            backBtn.disabled = false;
+            resetBtn.disabled = false;
         }
     }
 
@@ -280,6 +299,40 @@ export class SurveyApp {
                 <strong>エラー:</strong> ${message}
             </div>
         `;
+    }
+
+    // 送信状態を表示（デバッグ用）
+    showSubmissionStatus() {
+        const status = this.gasSender.getSubmissionStatus();
+        const history = this.gasSender.getSubmissionHistory();
+        
+        console.log('送信状態:', status);
+        console.log('送信履歴:', history);
+        
+        // 送信履歴を画面に表示（デバッグ用）
+        if (history.length > 0) {
+            const container = document.getElementById('survey-container');
+            const historyHtml = history.map(entry => `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <strong>${entry.timestamp}</strong><br>
+                    ステータス: ${entry.status}<br>
+                    ${entry.error ? `エラー: ${entry.error}` : ''}
+                </div>
+            `).join('');
+            
+            container.innerHTML = `
+                <div class="success">
+                    <strong>送信履歴:</strong>
+                    ${historyHtml}
+                </div>
+            `;
+        }
+    }
+
+    // 送信履歴をクリア
+    clearSubmissionHistory() {
+        this.gasSender.clearHistory();
+        console.log('送信履歴をクリアしました');
     }
 
     // 成功メッセージを表示
