@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title><?= surveyConfig.name ?></title>
+<style>
+  /* 基本レイアウト */
+  body   { font-family: sans-serif; margin: 24px; line-height: 1.6; }
+  h2     { margin-bottom: 8px; }
+  form   { max-width: 480px; }
+  .item  { margin: 18px 0; }
+
+  /* 項目ラベル（太字） */
+  .item label { font-weight: bold; display: block; margin-bottom: 4px; }
+
+  /* 説明文を細く小さく */
+  .item label .desc{
+    font-weight: normal;
+    font-size: 0.85em;
+    color: #666;
+    line-height: 1.4;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* スライダーをやや長めに */
+  input[type="range"]{ width: 100%; max-width: 480px; }
+
+  /* アンカー（小さい↔大きい 等）表示 */
+  .anchors{
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    margin-top: 2px;
+    color: #555;
+  }
+
+  /* ボタン類 */
+  button{ padding: 6px 14px; font-size: 1em; margin-right: 12px; cursor: pointer; }
+  #resetBtn{ background: #e74c3c; color: #fff; border: none; }
+  #resetBtn:hover{ background: #c0392b; }
+  button:disabled{ opacity: 0.6; cursor: not-allowed; }
+
+  /* 注記・文献 */
+  .note{ font-size: 0.85em; color: #555; margin-top: 28px; }
+  
+  /* ローディング表示 */
+  .loading{ display: none; text-align: center; margin: 20px 0; }
+  .loading.show{ display: block; }
+  
+  /* エラー表示 */
+  .error{ color: #e74c3c; background: #fdf2f2; padding: 10px; border-radius: 4px; margin: 10px 0; }
+  
+  /* 成功表示 */
+  .success{ color: #27ae60; background: #f0f9f0; padding: 10px; border-radius: 4px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<h2><?= surveyConfig.name ?></h2>
+
+<!-- 実験パラメータ表示 -->
+<div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9em;">
+  <strong>実験情報:</strong><br>
+  UID: <?= uid ?><br>
+  Method: <?= method ?><br>
+  Session: <?= session ?>
+</div>
+
+<p class="note">
+  各スライダーは左が<strong>弱い／小さい／短い／良い</strong>，
+  右が<strong>強い／大きい／長い／悪い</strong>などを示します
+  （芳賀・水上，1996 表１準拠）。
+</p>
+
+<form id="surveyForm">
+  <!-- 実験パラメータを隠しフィールドで保持 -->
+  <input type="hidden" name="uid" value="<?= uid ?>">
+  <input type="hidden" name="method" value="<?= method ?>">
+  <input type="hidden" name="session" value="<?= session ?>">
+  <input type="hidden" name="surveyType" value="<?= surveyType ?>">
+  
+  <!-- 動的にフィールドを生成 -->
+  <? for (let field of surveyConfig.fields) { ?>
+    <div class="item">
+      <label for="<?= field.id ?>">
+        <?= field.label ?>
+        <? if (field.desc) { ?>
+          <span class="desc"><?= field.desc ?></span>
+        <? } ?>
+      </label>
+      
+      <? if (field.type === 'range') { ?>
+        <input type="range" id="<?= field.id ?>" name="<?= field.id ?>" 
+               min="0" max="100" value="50" required>
+        <? if (surveyConfig.anchors && surveyConfig.anchors[field.id]) { ?>
+          <div class="anchors">
+            <span><?= surveyConfig.anchors[field.id][0] ?></span>
+            <span><?= surveyConfig.anchors[field.id][1] ?></span>
+          </div>
+        <? } ?>
+      <? } else if (field.type === 'text') { ?>
+        <input type="text" id="<?= field.id ?>" name="<?= field.id ?>" required>
+      <? } ?>
+    </div>
+  <? } ?>
+  
+  <!-- ボタン -->
+  <button type="submit" id="submitBtn">アンケートを送信</button>
+  <button type="button" id="resetBtn">リセット</button>
+</form>
+
+<!-- ローディング表示 -->
+<div id="loading" class="loading">
+  <p>送信中...</p>
+</div>
+
+<!-- 結果表示エリア -->
+<div id="resultArea"></div>
+
+<!-- 参考文献 -->
+<p class="note">
+  参考文献：<br>
+  芳賀 繁・水上 洋介（1996）
+  「日本語版 NASA-TLX によるメンタルワークロード測定」
+  『産業・組織心理学研究』10(2).<br>
+  Hart, S. G. &amp; Staveland, L. E. (1988)
+  "Development of NASA-TLX (Task Load Index)." In
+  <em>Human Mental Workload</em>.
+</p>
+
+<script>
+// フォーム送信処理
+document.getElementById('surveyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  // 送信ボタンを無効化
+  const submitBtn = document.getElementById('submitBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const loading = document.getElementById('loading');
+  const resultArea = document.getElementById('resultArea');
+  
+  submitBtn.disabled = true;
+  resetBtn.disabled = true;
+  loading.classList.add('show');
+  resultArea.innerHTML = '';
+  
+  // フォームデータを収集
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData);
+  
+  // GASに送信
+  google.script.run
+    .withSuccessHandler(function(result) {
+      loading.classList.remove('show');
+      submitBtn.disabled = false;
+      resetBtn.disabled = false;
+      
+      if (result.success) {
+        resultArea.innerHTML = `
+          <div class="success">
+            <strong>送信完了！</strong><br>
+            ${result.message}
+          </div>
+        `;
+        
+        // 3秒後にフォームをリセット
+        setTimeout(() => {
+          document.getElementById('surveyForm').reset();
+          resultArea.innerHTML = '';
+        }, 3000);
+        
+      } else {
+        resultArea.innerHTML = `
+          <div class="error">
+            <strong>エラーが発生しました</strong><br>
+            ${result.message}
+          </div>
+        `;
+      }
+    })
+    .withFailureHandler(function(error) {
+      loading.classList.remove('show');
+      submitBtn.disabled = false;
+      resetBtn.disabled = false;
+      
+      resultArea.innerHTML = `
+        <div class="error">
+          <strong>エラーが発生しました</strong><br>
+          ${error.message || '不明なエラーが発生しました'}
+        </div>
+      `;
+    })
+    .submitSurveyResult(data);
+});
+
+// リセット処理
+document.getElementById('resetBtn').addEventListener('click', function() {
+  if (confirm('入力をリセットしてもよろしいですか？')) {
+    document.getElementById('surveyForm').reset();
+    document.getElementById('resultArea').innerHTML = '';
+  }
+});
+
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', function() {
+  // フォームの初期化
+  console.log('アンケートフォームが読み込まれました');
+  console.log('UID:', '<?= uid ?>');
+  console.log('Method:', '<?= method ?>');
+  console.log('Session:', '<?= session ?>');
+});
+</script>
+
+</body>
+</html>

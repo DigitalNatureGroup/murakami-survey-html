@@ -1,0 +1,163 @@
+<div style="text-align: center; padding: 40px 20px;">
+  <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+  
+  <h1 style="color: #28a745; margin-bottom: 20px;">アンケートは完了しました！</h1>
+  
+  <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+    ご協力いただき、ありがとうございました。
+  </p>
+  
+  <div style="background: #e8f5e8; padding: 30px; border-radius: 12px; margin: 30px 0; border: 2px solid #28a745;">
+    <h2 style="color: #2e7d32; margin-top: 0;">✅ 完了した内容</h2>
+    <ul style="text-align: left; max-width: 500px; margin: 0 auto; padding-left: 20px;">
+      <li><strong>実験の説明</strong> - 実験の流れと注意事項の確認</li>
+      <li><strong>NASA-TLX 作業負荷評価</strong> - 7項目の作業負荷評価</li>
+      <li><strong>次のアンケートへの案内</strong> - SUS アンケートの説明</li>
+      <li><strong>SUS システム使用性尺度</strong> - 10項目の使いやすさ評価</li>
+      <li><strong>送信確認</strong> - 回答データの最終確認</li>
+    </ul>
+  </div>
+  
+  <div style="background: #fff3cd; padding: 25px; border-radius: 12px; margin: 30px 0; border: 2px solid #ffc107;">
+    <h3 style="color: #856404; margin-top: 0;">📊 回答データについて</h3>
+    <p style="margin: 0; color: #856404;">
+      すべての回答は Google Spreadsheet に安全に保存されました。<br>
+      UID: <strong><?= uid ?></strong>、Session: <strong><?= session ?></strong> で記録されています。
+    </p>
+  </div>
+  
+  <div style="background: #e3f2fd; padding: 25px; border-radius: 12px; margin: 30px 0; border: 2px solid #2196f3;">
+    <h3 style="color: #1976d2; margin-top: 0;">🔒 プライバシーとセキュリティ</h3>
+    <p style="margin: 0; color: #1976d2;">
+      回答データは研究目的でのみ使用され、個人を特定できる情報は含まれていません。<br>
+      データは安全に管理され、研究完了後に適切に処理されます。
+    </p>
+  </div>
+  
+  <div style="background: #f3e5f5; padding: 25px; border-radius: 12px; margin: 30px 0; border: 2px solid #9c27b0;">
+    <h3 style="color: #7b1fa2; margin-top: 0;">💡 次のステップ</h3>
+    <p style="margin: 0; color: #7b1fa2;">
+      実験はこれで終了です。ウィンドウを閉じていただいて構いません。<br>
+      ご質問やご不明な点がございましたら、実験担当者までお声がけください。
+    </p>
+  </div>
+  
+  <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <p style="margin: 0; color: #666; font-size: 0.9em;">
+      <strong>実験完了時刻:</strong> <span id="completionTime"></span><br>
+      <strong>所要時間:</strong> 約10-15分
+    </p>
+  </div>
+  
+  <!-- 実験担当者への連絡情報（必要に応じて） -->
+  <div style="margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 8px; border: 1px solid #28a745;">
+    <h4 style="color: #2e7d32; margin-top: 0;">📞 お問い合わせ</h4>
+    <p style="margin: 0; color: #2e7d32; font-size: 0.9em;">
+      実験に関するご質問やご不明な点がございましたら、<br>
+      実験担当者までお気軽にお声がけください。
+    </p>
+  </div>
+</div>
+
+<script>
+  // 完了時刻を表示
+  function updateCompletionTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    document.getElementById('completionTime').textContent = timeString;
+  }
+  
+  // ページ読み込み時の処理
+  window.onPageLoad = function() {
+    console.log('完了ページが読み込まれました');
+    
+    // 完了時刻を表示
+    updateCompletionTime();
+    
+    // 完了ログの送信（オプション）
+    logCompletion();
+    
+    // ページ離脱防止の解除
+    window.onbeforeunload = null;
+  };
+  
+  // 完了ログの送信
+  function logCompletion() {
+    try {
+      // 完了イベントをログに記録
+      console.log('実験完了', {
+        uid: '<?= uid ?>',
+        session: '<?= session ?>',
+        completedAt: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      });
+      
+      // 必要に応じてアナリティクスやログサービスに送信
+      // analytics.track('experiment_completed', { ... });
+      
+    } catch (error) {
+      console.warn('完了ログの送信に失敗:', error);
+    }
+  }
+  
+  // ページ離脱時の処理（オプション）
+  window.addEventListener('beforeunload', function(e) {
+    // 完了ページでは離脱を許可
+    return undefined;
+  });
+</script>
+
+<style>
+  /* 完了ページ専用スタイル */
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  
+  .container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  
+  /* アニメーション効果 */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .container > div {
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  .container > div:nth-child(2) { animation-delay: 0.1s; }
+  .container > div:nth-child(3) { animation-delay: 0.2s; }
+  .container > div:nth-child(4) { animation-delay: 0.3s; }
+  .container > div:nth-child(5) { animation-delay: 0.4s; }
+  .container > div:nth-child(6) { animation-delay: 0.5s; }
+  .container > div:nth-child(7) { animation-delay: 0.6s; }
+  
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .container {
+      margin: 0;
+      border-radius: 0;
+    }
+    
+    .container > div {
+      padding: 20px 15px;
+    }
+  }
+</style>

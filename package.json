@@ -1,0 +1,35 @@
+{
+  "name": "murakami-survey-html",
+  "version": "1.0.0",
+  "description": "Google Apps Script (GAS) で動作する拡張可能なアンケートシステムです。実験アプリからアンケートへの遷移と、結果のGoogle Spreadsheetへの自動保存を実現します。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "login": "npx clasp login",
+    "create": "npx clasp create --type standalone --title 'アンケートシステム'",
+    "push": "npx clasp push",
+    "pull": "npx clasp pull",
+    "open": "npx clasp open",
+    "deploy": "npx clasp deploy",
+    "deploy:webapp": "npx clasp deploy --deploymentId webapp",
+    "logs": "npx clasp logs",
+    "run:test": "npx clasp run testSurvey",
+    "run:init": "npx clasp run initializeSpreadsheet",
+    "run:system-test": "npx clasp run runSystemTest",
+    "serve": "python3 -m http.server 8000",
+    "serve:alt": "npx http-server -p 8000",
+    "test:local": "open http://localhost:8000/test-local.html"
+  },
+  "keywords": [
+    "gas",
+    "survey",
+    "google-apps-script",
+    "nasa-tlx"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@google/clasp": "^2.5.0",
+    "http-server": "^14.1.1"
+  }
+}

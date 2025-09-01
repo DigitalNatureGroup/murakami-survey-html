@@ -1,0 +1,126 @@
+<h2>送信確認</h2>
+
+<p>以上でアンケートは終了です。すべての回答が正常に保存されていることを確認してください。</p>
+
+<div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+  <h3 style="margin-top: 0; color: #2e7d32;">✅ 完了したアンケート</h3>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li><strong>NASA-TLX 作業負荷評価</strong> - 7項目の作業負荷評価</li>
+    <li><strong>SUS システム使用性尺度</strong> - 10項目の使いやすさ評価</li>
+  </ul>
+</div>
+
+<div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+  <h3 style="margin-top: 0; color: #856404;">📊 回答データの確認</h3>
+  <p style="margin: 0;">
+    以下の情報が記録されています：
+  </p>
+  <ul style="margin: 10px 0; padding-left: 20px;">
+    <li><strong>UID:</strong> <?= uid ?></li>
+    <li><strong>Session:</strong> <?= session ?></li>
+    <li><strong>回答日時:</strong> <span id="currentTime"></span></li>
+    <li><strong>保存先:</strong> Google Spreadsheet</li>
+  </ul>
+</div>
+
+<div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+  <h3 style="margin-top: 0; color: #1976d2;">🔒 データの取り扱い</h3>
+  <p style="margin: 0;">
+    回答データは研究目的でのみ使用され、個人を特定できる情報は含まれていません。
+    データは安全に管理され、研究完了後に適切に処理されます。
+  </p>
+</div>
+
+<div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+  <h3 style="margin-top: 0; color: #155724;">🎯 次のステップ</h3>
+  <p style="margin: 0;">
+    「送信」ボタンを押すと、すべての回答が最終確認され、完了ページに移動します。
+    この操作は取り消すことができません。
+  </p>
+</div>
+
+<!-- 最終確認チェックボックス -->
+<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #e9ecef;">
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="checkbox" id="confirmCheckbox" style="transform: scale(1.2);">
+    <label for="confirmCheckbox" style="font-weight: bold; color: #333;">
+      上記の内容を確認し、回答データの送信に同意します
+    </label>
+  </div>
+</div>
+
+<script>
+  // 現在時刻を表示
+  function updateCurrentTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    document.getElementById('currentTime').textContent = timeString;
+  }
+  
+  // ページ読み込み時の処理
+  window.onPageLoad = function() {
+    console.log('送信確認ページが読み込まれました');
+    
+    // 現在時刻を表示
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+    
+    // チェックボックスの変更を監視
+    const checkbox = document.getElementById('confirmCheckbox');
+    const nextBtn = document.querySelector('#nextBtn');
+    
+    if (checkbox && nextBtn) {
+      checkbox.addEventListener('change', function() {
+        nextBtn.disabled = !this.checked;
+        if (this.checked) {
+          nextBtn.style.opacity = '1';
+        } else {
+          nextBtn.style.opacity = '0.6';
+        }
+      });
+      
+      // 初期状態では送信ボタンを無効化
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.6';
+    }
+  };
+  
+  // 回答データを収集する関数（レイアウトから呼び出される）
+  window.collectAnswers = function() {
+    const checkbox = document.getElementById('confirmCheckbox');
+    if (!checkbox || !checkbox.checked) {
+      throw new Error('送信の確認チェックボックスにチェックを入れてください');
+    }
+    
+    return { 
+      confirm: true,
+      confirmedAt: new Date().toISOString(),
+      finalConfirmation: '送信確認完了'
+    };
+  };
+</script>
+
+<style>
+  /* 送信確認ページ専用スタイル */
+  .form-item {
+    margin: 20px 0;
+  }
+  
+  /* チェックボックスのカスタマイズ */
+  input[type="checkbox"] {
+    accent-color: #28a745;
+  }
+  
+  /* ボタンの無効化スタイル */
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>

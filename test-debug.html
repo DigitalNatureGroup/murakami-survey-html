@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバッグテスト</title>
+</head>
+<body>
+    <h1>デバッグテスト</h1>
+    <p>このページでGoogle Apps Scriptの基本的な動作をテストします。</p>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        // テスト用のパラメータ
+        const testParams = {
+            uid: 'TEST_USER_001',
+            session: 'TEST_SESSION_001',
+            idx: '0'
+        };
+        
+        // URLを構築してテストページに移動
+        function testNavigation() {
+            const params = new URLSearchParams(testParams);
+            const testUrl = window.location.origin + window.location.pathname.replace('test-debug.html', '') + '?' + params.toString();
+            
+            console.log('テスト用URL:', testUrl);
+            document.getElementById('test-results').innerHTML = `
+                <h2>テスト用URL</h2>
+                <p><a href="${testUrl}" target="_blank">${testUrl}</a></p>
+                <p>上記リンクをクリックして、アンケートシステムが動作するかテストしてください。</p>
+            `;
+        }
+        
+        // ページ読み込み時にテストを実行
+        document.addEventListener('DOMContentLoaded', testNavigation);
+    </script>
+</body>
+</html>

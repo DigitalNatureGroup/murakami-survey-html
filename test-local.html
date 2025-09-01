@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>実践的テスト - アンケートシステム</title>
+<style>
+  body { font-family: sans-serif; margin: 24px; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+  .test-section h3 { margin-top: 0; color: #333; }
+  .url-input { width: 100%; padding: 8px; margin: 10px 0; font-family: monospace; }
+  .test-button { padding: 10px 20px; margin: 5px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .test-button:hover { background: #2980b9; }
+  .test-button.success { background: #27ae60; }
+  .test-button.error { background: #e74c3c; }
+  .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+  .result.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .result.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  .result.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+  .survey-container { margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; min-height: 600px; }
+  .parameter-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .parameter-form input, .parameter-form select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+  .parameter-form label { font-weight: bold; }
+  .url-test { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; }
+  .url-test h4 { margin-top: 0; }
+  .test-url { font-family: monospace; background: #fff; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
+  .test-url a { color: #3498db; text-decoration: none; }
+  .test-url a:hover { text-decoration: underline; }
+  .survey-preview { background: #fff; padding: 20px; }
+  .survey-preview h2 { margin-top: 0; color: #333; }
+  .experiment-info { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9em; }
+  .form-item { margin: 18px 0; }
+  .form-item label { font-weight: bold; display: block; margin-bottom: 4px; }
+  .form-item .desc { font-weight: normal; font-size: 0.85em; color: #666; line-height: 1.4; display: block; margin-top: 2px; }
+  .form-item input[type="range"] { width: 100%; max-width: 480px; }
+  .form-item .anchors { display: flex; justify-content: space-between; font-size: 0.85em; margin-top: 2px; color: #555; }
+  .form-item .likert-scale { display: flex; justify-content: space-between; margin-top: 8px; }
+  .form-item .likert-option { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 0.85em; }
+  .form-item .rating { display: flex; gap: 4px; margin-top: 8px; }
+  .form-item .rating input[type="radio"] { display: none; }
+  .form-item .rating label { font-size: 24px; color: #ddd; cursor: pointer; }
+  .form-item .rating input[type="radio"]:checked ~ label,
+  .form-item .rating label:hover,
+  .form-item .rating label:hover ~ label { color: #ffd700; }
+  .form-item input[type="text"], .form-item textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+  .form-item textarea { min-height: 100px; resize: vertical; }
+  .submit-button { padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+  .submit-button:hover { background: #229954; }
+  .submit-button:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>実践的テスト - アンケートシステム</h1>
+  
+  <!-- URLパラメータテスト -->
+  <div class="test-section">
+    <h3>1. URLパラメータテスト</h3>
+    <p>実際のGASアプリケーションのようなURLパラメータ処理をテストします。</p>
+    
+    <div class="parameter-form">
+      <div>
+        <label for="uid">UID:</label>
+        <input type="text" id="uid" value="TEST123" placeholder="参加者ID">
+      </div>
+      <div>
+        <label for="method">Method:</label>
+        <select id="method">
+          <option value="X">X (NASA-TLX)</option>
+          <option value="Y">Y (リッカート尺度)</option>
+          <option value="Z">Z (カスタムアンケート)</option>
+        </select>
+      </div>
+      <div>
+        <label for="session">Session:</label>
+        <input type="text" id="session" value="20241201_001" placeholder="セッションID">
+      </div>
+      <div>
+        <label for="baseUrl">Base URL:</label>
+        <input type="text" id="baseUrl" value="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" placeholder="GASのベースURL">
+      </div>
+    </div>
+    
+    <button class="test-button" onclick="generateTestUrls()">テストURL生成</button>
+    <button class="test-button" onclick="testCurrentUrl()">現在のURLをテスト</button>
+    
+    <div id="urlTests"></div>
+  </div>
+  
+  <!-- アンケートシミュレーション -->
+  <div class="test-section">
+    <h3>2. アンケートシミュレーション</h3>
+    <p>URLパラメータに基づいて実際のアンケートを表示します。</p>
+    
+    <div class="survey-container">
+      <div id="surveyPreview" class="survey-preview">
+        <p>URLパラメータを設定して「現在のURLをテスト」をクリックしてください。</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- テスト結果 -->
+  <div class="test-section">
+    <h3>3. テスト結果</h3>
+    <div id="testResults"></div>
+  </div>
+</div>
+
+<script>
+// アンケート設定（実際のGAS設定を模倣）
+const SURVEY_CONFIGS = {
+  'nasa-tlx': {
+    name: 'NASA-TLX 芳賀版 作業負荷評価フォーム',
+    template: 'nasa-tlx',
+    fields: [
+      {id: 'mental', label: '精神的要求 (Mental Demand)', type: 'range', desc: 'どの程度の知的・知覚的活動（考える、決める、計算する、記憶する，見るなど）を必要としましたか.課題はやさしかったですか難しかったですか. 単純でしたか複雑でしたか,正確さが求められましたか, 大ざっぱでよかったですか.'},
+      {id: 'physical', label: '身体的要求 (Physical Demand)', type: 'range', desc: 'どの程度の身体的活動（押す、引く、回す、制倒する、動き回るなど）を必要としましたか.作業はラクでしたかキツかったですか、ゆっくりできましたかキビキビやらなけれはなりませんでしたか.'},
+      {id: 'temporal', label: '時間的要求 (Temporal Demand)', type: 'range', desc: '仕事のペースや課題が発生する頻度のために感じる時間的切迫感はどの程度でしたか. ペースはゆっくりとして余裕があるものでしたか, それとも速くて余裕のないものでしたか.'},
+      {id: 'performance', label: '作業成績 (Performance)', type: 'range', desc: '作業指示者（またはあなた自身）によって設定された課題の目標をどの程度達成できたと思いますか. 目標の達成に関して自分の作業成績にどの程度満足していますか.'},
+      {id: 'effort', label: '努力 (Effort)', type: 'range', desc: '作業成績のレベルを達成・維持するために, 精神的・身体的にどの程度いっしょうけんめいに作業しなけれはなりませんでしたか.'},
+      {id: 'frustration', label: '欲求不満 (Frustration)', type: 'range', desc: '作業中に、不安感、落胆、いらいら、ストレス、悩みをどの程度感じましたか. あるいは逆に、安心感、満足感、充足感、楽しさ、リラックスをどの程度感じましたか.'},
+      {id: 'overall', label: '全体的負荷 (Overall Workload)', type: 'range', desc: 'さまざまな負荷要因，負荷原因. 部分部分の課題内容を総合すると、全体としてどの程度の作業負担を感じましたか.'}
+    ],
+    anchors: {
+      'mental': ['小さい', '大きい'],
+      'physical': ['小さい', '大きい'],
+      'temporal': ['短い', '長い'],
+      'performance': ['良い', '悪い'],
+      'effort': ['少ない', '多い'],
+      'frustration': ['低い', '高い'],
+      'overall': ['低い', '高い']
+    }
+  },
+  'likert-scale': {
+    name: 'リッカート尺度アンケート',
+    template: 'likert-scale',
+    fields: [
+      {id: 'q1', label: '質問1', type: 'likert', desc: 'このシステムは使いやすいと思いますか？'},
+      {id: 'q2', label: '質問2', type: 'likert', desc: 'このシステムの機能は十分だと思いますか？'},
+      {id: 'q3', label: '質問3', type: 'text', desc: '自由回答をお聞かせください'}
+    ],
+    likertOptions: ['全くそう思わない', 'そう思わない', 'どちらでもない', 'そう思う', 'とてもそう思う']
+  },
+  'custom-survey': {
+    name: 'カスタムアンケート',
+    template: 'custom-survey',
+    fields: [
+      {id: 'rating', label: '評価', type: 'rating', desc: '星評価をお願いします'},
+      {id: 'comment', label: 'コメント', type: 'textarea', desc: '詳細なコメントをお聞かせください'}
+    ]
+  }
+};
+
+const METHOD_SURVEY_MAP = {
+  'X': 'nasa-tlx',
+  'Y': 'likert-scale',
+  'Z': 'custom-survey'
+};
+
+// URLパラメータを解析（実際のGAS doGet関数を模倣）
+function parseUrlParameters(url) {
+  try {
+    const urlObj = new URL(url);
+    const params = {};
+    for (const [key, value] of urlObj.searchParams) {
+      params[key] = value;
+    }
+    return params;
+  } catch (error) {
+    return {};
+  }
+}
+
+// アンケート設定を取得（実際のGAS関数を模倣）
+function getSurveyConfig(surveyType) {
+  return SURVEY_CONFIGS[surveyType] || null;
+}
+
+// メソッドからアンケートタイプを取得（実際のGAS関数を模倣）
+function getSurveyTypeByMethod(method) {
+  return METHOD_SURVEY_MAP[method] || null;
+}
+
+// アンケートHTMLを生成（実際のGASテンプレート処理を模倣）
+function generateSurveyHtml(uid, method, session, surveyType, surveyConfig) {
+  let html = `
+    <h2>${surveyConfig.name}</h2>
+    
+    <div class="experiment-info">
+      <strong>実験情報:</strong><br>
+      UID: ${uid}<br>
+      Method: ${method}<br>
+      Session: ${session}
+    </div>
+    
+    <form id="surveyForm" onsubmit="submitSurvey(event)">
+      <input type="hidden" name="uid" value="${uid}">
+      <input type="hidden" name="method" value="${method}">
+      <input type="hidden" name="session" value="${session}">
+      <input type="hidden" name="surveyType" value="${surveyType}">
+  `;
+  
+  // フィールドを動的に生成
+  for (const field of surveyConfig.fields) {
+    html += `<div class="form-item">`;
+    html += `<label for="${field.id}">${field.label}`;
+    if (field.desc) {
+      html += `<span class="desc">${field.desc}</span>`;
+    }
+    html += `</label>`;
+    
+    if (field.type === 'range') {
+      html += `<input type="range" id="${field.id}" name="${field.id}" min="0" max="100" value="50" required>`;
+      if (surveyConfig.anchors && surveyConfig.anchors[field.id]) {
+        html += `<div class="anchors">
+          <span>${surveyConfig.anchors[field.id][0]}</span>
+          <span>${surveyConfig.anchors[field.id][1]}</span>
+        </div>`;
+      }
+    } else if (field.type === 'likert') {
+      html += `<div class="likert-scale">`;
+      for (let i = 0; i < surveyConfig.likertOptions.length; i++) {
+        html += `<div class="likert-option">
+          <input type="radio" id="${field.id}_${i}" name="${field.id}" value="${i + 1}" required>
+          <label for="${field.id}_${i}">${surveyConfig.likertOptions[i]}</label>
+        </div>`;
+      }
+      html += `</div>`;
+    } else if (field.type === 'rating') {
+      html += `<div class="rating">`;
+      for (let i = 1; i <= 5; i++) {
+        html += `<input type="radio" id="${field.id}_${i}" name="${field.id}" value="${i}" required>
+          <label for="${field.id}_${i}">★</label>`;
+      }
+      html += `</div>`;
+    } else if (field.type === 'text') {
+      html += `<input type="text" id="${field.id}" name="${field.id}" required>`;
+    } else if (field.type === 'textarea') {
+      html += `<textarea id="${field.id}" name="${field.id}" required></textarea>`;
+    }
+    
+    html += `</div>`;
+  }
+  
+  html += `
+      <button type="submit" class="submit-button">アンケートを送信</button>
+    </form>
+  `;
+  
+  return html;
+}
+
+// テストURL生成
+function generateTestUrls() {
+  const uid = document.getElementById('uid').value;
+  const method = document.getElementById('method').value;
+  const session = document.getElementById('session').value;
+  const baseUrl = document.getElementById('baseUrl').value;
+  
+  const testCases = [
+    { uid: uid, method: method, session: session, description: '正常なケース' },
+    { uid: '', method: method, session: session, description: 'UIDなし（エラー）' },
+    { uid: uid, method: '', session: session, description: 'Methodなし（エラー）' },
+    { uid: uid, method: 'INVALID', session: session, description: '無効なMethod（エラー）' },
+    { uid: 'TEST456', method: 'Y', session: '20241201_002', description: 'リッカート尺度' },
+    { uid: 'TEST789', method: 'Z', session: '20241201_003', description: 'カスタムアンケート' }
+  ];
+  
+  let html = '<h4>テストケース:</h4>';
+  
+  for (const testCase of testCases) {
+    const url = `${baseUrl}?uid=${encodeURIComponent(testCase.uid)}&method=${encodeURIComponent(testCase.method)}&session=${encodeURIComponent(testCase.session)}`;
+    html += `
+      <div class="url-test">
+        <h4>${testCase.description}</h4>
+        <div class="test-url">
+          <a href="#" onclick="testSpecificUrl('${url}'); return false;">${url}</a>
+        </div>
+      </div>
+    `;
+  }
+  
+  document.getElementById('urlTests').innerHTML = html;
+}
+
+// 特定のURLをテスト
+function testSpecificUrl(url) {
+  const params = parseUrlParameters(url);
+  const uid = params.uid;
+  const method = params.method;
+  const session = params.session;
+  
+  // パラメータ検証（実際のGAS doGet関数を模倣）
+  if (!uid || !method) {
+    showSurveyError('パラメータが不正です。必要なパラメータ: uid, method');
+    return;
+  }
+  
+  const surveyType = getSurveyTypeByMethod(method);
+  if (!surveyType) {
+    showSurveyError(`無効なメソッドです: ${method}<br>利用可能なメソッド: ${Object.keys(METHOD_SURVEY_MAP).join(', ')}`);
+    return;
+  }
+  
+  const surveyConfig = getSurveyConfig(surveyType);
+  if (!surveyConfig) {
+    showSurveyError(`アンケート設定が見つかりません: ${surveyType}`);
+    return;
+  }
+  
+  // アンケートを表示
+  const surveyHtml = generateSurveyHtml(uid, method, session, surveyType, surveyConfig);
+  document.getElementById('surveyPreview').innerHTML = surveyHtml;
+  
+  // テスト結果を記録
+  addTestResult('success', `✅ アンケート表示成功<br>URL: ${url}<br>SurveyType: ${surveyType}<br>Name: ${surveyConfig.name}`);
+}
+
+// 現在のURLをテスト
+function testCurrentUrl() {
+  const uid = document.getElementById('uid').value;
+  const method = document.getElementById('method').value;
+  const session = document.getElementById('session').value;
+  const baseUrl = document.getElementById('baseUrl').value;
+  
+  const url = `${baseUrl}?uid=${encodeURIComponent(uid)}&method=${encodeURIComponent(method)}&session=${encodeURIComponent(session)}`;
+  testSpecificUrl(url);
+}
+
+// アンケートエラー表示
+function showSurveyError(message) {
+  document.getElementById('surveyPreview').innerHTML = `
+    <h2>エラー</h2>
+    <div class="result error">${message}</div>
+  `;
+}
+
+// アンケート送信（モック）
+function submitSurvey(event) {
+  event.preventDefault();
+  
+  const formData = new FormData(event.target);
+  const data = {};
+  for (const [key, value] of formData) {
+    data[key] = value;
+  }
+  
+  // 送信データの検証
+  const errors = [];
+  if (!data.uid) errors.push('UIDが不足');
+  if (!data.method) errors.push('Methodが不足');
+  if (!data.surveyType) errors.push('SurveyTypeが不足');
+  
+  const surveyConfig = getSurveyConfig(data.surveyType);
+  if (surveyConfig) {
+    for (const field of surveyConfig.fields) {
+      if (field.type !== 'text' && field.type !== 'textarea') {
+        if (!data[field.id]) {
+          errors.push(`${field.label}の値が不足`);
+        }
+      }
+    }
+  }
+  
+  if (errors.length > 0) {
+    addTestResult('error', `❌ 送信エラー:<br>${errors.join('<br>')}`);
+  } else {
+    addTestResult('success', `✅ アンケート送信成功<br>データ: ${JSON.stringify(data, null, 2)}`);
+    
+    // 送信完了メッセージ
+    document.getElementById('surveyPreview').innerHTML = `
+      <h2>送信完了</h2>
+      <div class="result success">
+        <p>アンケートが正常に送信されました。</p>
+        <p><strong>送信データ:</strong></p>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      </div>
+    `;
+  }
+}
+
+// テスト結果を追加
+function addTestResult(type, message) {
+  const timestamp = new Date().toLocaleTimeString();
+  const resultDiv = document.getElementById('testResults');
+  const resultHtml = `
+    <div class="result ${type}">
+      <strong>[${timestamp}]</strong><br>
+      ${message}
+    </div>
+  `;
+  resultDiv.innerHTML = resultHtml + resultDiv.innerHTML;
+}
+
+// 初期化
+document.addEventListener('DOMContentLoaded', function() {
+  addTestResult('info', '実践的テスト環境が準備されました。URLパラメータを設定してテストを実行してください。');
+});
+</script>
+
+</body>
+</html>

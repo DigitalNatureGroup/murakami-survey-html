@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= step.name || 'Survey' ?></title>
+  <style>
+    /* 基本レイアウト */
+    body { 
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+      margin: 0; 
+      padding: 0;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+    }
+    
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      background: white;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 300;
+    }
+    
+    .progress-bar {
+      background: rgba(255,255,255,0.2);
+      height: 4px;
+      margin-top: 15px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      background: #fff;
+      height: 100%;
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+    
+    .content {
+      padding: 40px;
+      min-height: 400px;
+    }
+    
+    .experiment-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border-left: 4px solid #667eea;
+      font-size: 0.9em;
+    }
+    
+    .experiment-info strong {
+      color: #667eea;
+    }
+    
+    .actions { 
+      margin-top: 40px; 
+      display: flex; 
+      gap: 15px;
+      justify-content: center;
+      padding: 20px 0;
+      border-top: 1px solid #eee;
+    }
+    
+    button { 
+      padding: 12px 24px; 
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+    
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5a6fd8;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .step-indicator {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .step-indicator .current {
+      color: #667eea;
+      font-weight: bold;
+    }
+    
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+      .container {
+        margin: 0;
+        box-shadow: none;
+      }
+      
+      .content {
+        padding: 20px;
+      }
+      
+      .actions {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+    
+    /* ローディング表示 */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loading.show {
+      display: block;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* エラー表示 */
+    .error {
+      color: #e74c3c;
+      background: #fdf2f2;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #e74c3c;
+    }
+    
+    /* 成功表示 */
+    .success {
+      color: #27ae60;
+      background: #f0f9f0;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <!-- ヘッダー -->
+    <div class="header">
+      <h1><?= step.name || 'Survey' ?></h1>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    
+    <!-- メインコンテンツ -->
+    <div class="content">
+      <!-- 実験情報 -->
+      <div class="experiment-info">
+        <strong>実験情報:</strong><br>
+        UID: <?= uid ?><br>
+        Session: <?= session ?><br>
+        進捗: <?= idx + 1 ?> / <?= pipeline.length ?>
+      </div>
+      
+      <!-- ステップインジケーター -->
+      <div class="step-indicator">
+        <? for (let i = 0; i < pipeline.length; i++) { ?>
+          <span class="<?= i === idx ? 'current' : '' ?>">
+            <?= i === 0 ? '開始' : i === pipeline.length - 1 ? '完了' : `ステップ${i}` ?>
+          </span>
+          <?= i < pipeline.length - 1 ? ' → ' : '' ?>
+        <? } ?>
+      </div>
+      
+      <!-- 各ステップのコンテンツ -->
+      <?!= include_(step.tpl + '.html', data); ?>
+      
+      <!-- ローディング表示 -->
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>処理中...</p>
+      </div>
+    </div>
+    
+    <!-- アクションボタン -->
+    <div class="actions">
+      <? if (step.kind !== 'done') { ?>
+        <? if (idx > 0) { ?>
+          <button class="btn-secondary" id="prevBtn">← 前へ</button>
+        <? } ?>
+        <button class="<?= step.kind === 'final' ? 'btn-success' : 'btn-primary' ?>" id="nextBtn">
+          <?= step.kind === 'final' ? '送信' : '次へ' ?>
+        </button>
+      <? } ?>
+    </div>
+  </div>
+
+  <script>
+    // グローバル状態（安全に初期化）
+    let rawStep, rawPipeline;
+    let stepStr, pipelineStr;
+    try {
+      // JSON文字列として渡されているので、再度パースする
+      stepStr = '<?= JSON.stringify(step) ?>';
+      pipelineStr = '<?= JSON.stringify(pipeline) ?>';
+      
+      rawStep = JSON.parse(stepStr);
+      rawPipeline = JSON.parse(pipelineStr);
+    } catch (e) {
+      console.error('JSON解析エラー:', e);
+      rawStep = {};
+      rawPipeline = [];
+    }
+    
+    const STATE = {
+      uid: '<?= uid ?>',
+      session: '<?= session ?>',
+      idx: 0,
+      step: rawStep || {},
+      pipeline: rawPipeline || [],
+      progress: null
+    };
+    
+    // idxを安全に設定
+    try {
+      STATE.idx = parseInt('<?= idx ?>', 10) || 0;
+    } catch (e) {
+      console.warn('idx解析エラー:', e);
+      STATE.idx = 0;
+    }
+    
+    // progressデータを安全に設定
+    try {
+      const progressStr = '<?= progress ? JSON.stringify(progress) : "null" ?>';
+      if (progressStr !== 'null') {
+        STATE.progress = JSON.parse(progressStr);
+      }
+    } catch (e) {
+      console.warn('progress解析エラー:', e);
+      STATE.progress = null;
+    }
+    
+    // デバッグ用の詳細ログ
+    console.log('=== デバッグ情報 ===');
+    console.log('生のstepデータ:', '<?= JSON.stringify(step) ?>');
+    console.log('生のpipelineデータ:', '<?= JSON.stringify(pipeline) ?>');
+    console.log('stepStr:', stepStr);
+    console.log('pipelineStr:', pipelineStr);
+    console.log('rawStep:', rawStep);
+    console.log('rawPipeline:', rawPipeline);
+    console.log('rawStep type:', typeof rawStep);
+    console.log('rawPipeline type:', typeof rawPipeline);
+    console.log('STATE.step:', STATE.step);
+    console.log('STATE.step.kind:', STATE.step?.kind);
+    console.log('STATE.step.id:', STATE.step?.id);
+    console.log('STATE.pipeline:', STATE.pipeline);
+    console.log('STATE.pipeline.length:', STATE.pipeline?.length);
+    console.log('STATE.pipeline[0]:', STATE.pipeline?.[0]);
+    console.log('==================');
+    
+    // STATE オブジェクトのログ出力（デバッグ用）
+    console.log('STATE初期化:', {
+      uid: STATE.uid,
+      session: STATE.session,
+      idx: STATE.idx,
+      stepId: STATE.step?.id,
+      stepKind: STATE.step?.kind,
+      pipelineLength: STATE.pipeline?.length
+    });
+
+    // ユーティリティ関数
+    function showLoading() {
+      document.getElementById('loading').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('show');
+    }
+    
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error';
+      errorDiv.innerHTML = message;
+      document.querySelector('.content').appendChild(errorDiv);
+      
+      // 3秒後に自動削除
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 3000);
+    }
+    
+    function showSuccess(message) {
+      const successDiv = document.createElement('div');
+      successDiv.className = 'success';
+      successDiv.innerHTML = message;
+      document.querySelector('.content').appendChild(successDiv);
+      
+      // 3秒後に自動削除
+      setTimeout(() => {
+        successDiv.remove();
+      }, 3000);
+    }
+
+    // 前へボタンの処理
+    const prevBtn = document.getElementById('prevBtn');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        const prevIdx = Math.max(0, STATE.idx - 1);
+        const url = `?uid=${encodeURIComponent(STATE.uid)}&session=${encodeURIComponent(STATE.session)}&idx=${prevIdx}`;
+        window.location.replace(url);
+      });
+    }
+
+    // 次へボタンの処理
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', async () => {
+        try {
+          // ボタンを無効化
+          nextBtn.disabled = true;
+          showLoading();
+          
+          // 各テンプレート内で window.collectAnswers を定義しておくと拾う
+          let answers = {};
+          try {
+            answers = typeof window.collectAnswers === 'function'
+              ? window.collectAnswers()
+              : {};
+          } catch (error) {
+            console.warn('回答収集でエラー:', error);
+            answers = {};
+          }
+
+          // フォームまたは最終ステップの場合のみデータを保存（taskはスキップ）
+          if (STATE.step.kind === 'form' || STATE.step.kind === 'final') {
+            console.log('データ保存が必要なステップ:', STATE.step.kind);
+            // データをシリアライゼーション可能な形に変換（postMessageエラー対策）
+            const safeAnswers = {};
+            try {
+              // 安全なコピーを作成
+              Object.keys(answers || {}).forEach(key => {
+                const value = answers[key];
+                if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                  safeAnswers[key] = value;
+                } else if (value !== null && value !== undefined) {
+                  safeAnswers[key] = String(value);
+                }
+              });
+            } catch (error) {
+              console.warn('回答データの変換でエラー:', error);
+            }
+            
+            const payload = {
+              uid: String(STATE.uid || ''),
+              session: String(STATE.session || ''),
+              stepId: String(STATE.step?.id || ''),
+              idx: Number(STATE.idx || 0),
+              answers: safeAnswers,
+              userAgent: String(navigator.userAgent || '').substring(0, 200) // さらに短く制限
+            };
+            
+            console.log('送信データ（安全版）:', payload);
+            
+            const result = await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error('タイムアウト: サーバーからの応答がありません（10秒）'));
+              }, 10000);
+              
+              // postMessageエラーを回避するため、より単純なデータ送信
+              google.script.run
+                .withSuccessHandler((result) => {
+                  clearTimeout(timeout);
+                  console.log('サーバー応答:', result);
+                  resolve(result || { ok: true });
+                })
+                .withFailureHandler((error) => {
+                  clearTimeout(timeout);
+                  console.error('サーバーエラー:', error);
+                  reject(new Error(String(error) || 'サーバーでエラーが発生しました'));
+                })
+                .saveAnswersApi(
+                  String(payload.uid),
+                  String(payload.session), 
+                  String(payload.stepId),
+                  Number(payload.idx),
+                  JSON.stringify(payload.answers),
+                  String(payload.userAgent)
+                );
+            });
+            
+            if (!result.ok) {
+              throw new Error(result.error || 'データの保存に失敗しました');
+            }
+            
+            showSuccess('データが保存されました');
+          } else {
+            console.log('データ保存をスキップ（taskページ）:', STATE.step.kind);
+          }
+
+          // 次のステップへ遷移
+          const nextIdx = Math.min(STATE.idx + 1, STATE.pipeline.length - 1);
+          console.log('次のステップへ遷移:', { current: STATE.idx, next: nextIdx });
+          const url = `?uid=${encodeURIComponent(STATE.uid)}&session=${encodeURIComponent(STATE.session)}&idx=${nextIdx}`;
+          
+          // taskページの場合は即座に遷移、formページの場合は少し待つ
+          const delay = (STATE.step.kind === 'form' || STATE.step.kind === 'final') ? 1000 : 0;
+          setTimeout(() => {
+            window.location.replace(url);
+          }, delay);
+          
+        } catch (error) {
+          console.error('エラー:', error);
+          showError(`エラーが発生しました: ${error.message}`);
+          hideLoading();
+          nextBtn.disabled = false;
+        }
+      });
+    }
+
+    // ページ読み込み完了時の処理
+    document.addEventListener('DOMContentLoaded', function() {
+      // 進捗バーの設定
+      const progressFill = document.getElementById('progressFill');
+      if (progressFill && STATE.pipeline && STATE.pipeline.length > 0) {
+        const progressPercent = ((STATE.idx + 1) / STATE.pipeline.length) * 100;
+        progressFill.style.width = progressPercent + '%';
+        setTimeout(() => {
+          progressFill.style.transition = 'width 0.8s ease';
+        }, 100);
+      }
+      
+      // 各テンプレート内で window.onPageLoad を定義しておくと実行
+      if (typeof window.onPageLoad === 'function') {
+        window.onPageLoad();
+      }
+      
+      console.log('導入ページが読み込まれました');
+    });
+  </script>
+</body>
+</html>
