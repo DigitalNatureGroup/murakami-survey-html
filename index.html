@@ -1,208 +1,240 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>NASA-TLX 芳賀版 作業負荷評価フォーム</title>
-<style>
-  /* 基本レイアウト */
-  body   { font-family: sans-serif; margin: 24px; line-height: 1.6; }
-  h2     { margin-bottom: 8px; }
-  form   { max-width: 480px; }
-  .item  { margin: 18px 0; }
-
-  /* 項目ラベル（太字） */
-  .item label { font-weight: bold; display: block; margin-bottom: 4px; }
-
-  /* 説明文を細く小さく */
-  .item label .desc{
-    font-weight: normal;
-    font-size: 0.85em;
-    color: #666;
-    line-height: 1.4;
-    display: block;
-    margin-top: 2px;
-  }
-
-  /* スライダーをやや長めに */
-  input[type="range"]{ width: 100%; max-width: 480px; }
-
-  /* アンカー（小さい↔大きい 等）表示 */
-  .anchors{
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85em;
-    margin-top: 2px;
-    color: #555;
-  }
-
-  /* ボタン類 */
-  button{ padding: 6px 14px; font-size: 1em; margin-right: 12px; cursor: pointer; }
-  #resetBtn{ background: #e74c3c; color: #fff; border: none; }
-  #resetBtn:hover{ background: #c0392b; }
-
-  /* 注記・文献 */
-  .note{ font-size: 0.85em; color: #555; margin-top: 28px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .info-item {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .survey-container {
+            margin-top: 30px;
+        }
+        
+        .survey-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .survey-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group .description {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>Survey System</h1>
+            <p>実験参加者の方へ：以下の質問にお答えください</p>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-item">
+                <span class="info-label">参加者ID:</span>
+                <span class="info-value" id="uid-display">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">条件:</span>
+                <span class="info-value" id="condition-display">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">手法:</span>
+                <span class="info-value" id="method-display">-</span>
+            </div>
+        </div>
+        
+        <div id="survey-container" class="survey-container">
+            <div class="loading">読み込み中...</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-secondary" id="back-btn" style="display: none;">戻る</button>
+            <button class="btn btn-primary" id="submit-btn" style="display: none;">結果を送信</button>
+            <button class="btn btn-secondary" id="reset-btn" style="display: none;">リセット</button>
+        </div>
+    </div>
 
-<h2>NASA-TLX 芳賀版 作業負荷評価フォーム</h2>
-<p class="note">
-  各スライダーは左が<strong>弱い／小さい／短い／良い</strong>，
-  右が<strong>強い／大きい／長い／悪い</strong>などを示します
-  （芳賀・水上，1996 表１準拠）。
-</p>
-
-<form id="tlxForm">
-  <!-- ID -->
-  <div class="item">
-    <label for="userID">参加者 ID</label>
-    <input type="text" id="userID" name="userID" required>
-  </div>
-
-  <!-- 精神的要求 -->
-  <div class="item">
-    <label for="mental">
-      精神的要求 (Mental Demand)
-      <span class="desc">
-        どの程度の知的・知覚的活動（考える、決める、計算する、記憶する，見るなど）を必要としましたか.課題はやさしかったですか難しかったですか. 単純でしたか複雑でしたか,正確さが求められましたか, 大ざっぱでよかったですか.
-      </span>
-    </label>
-    <input type="range" id="mental" name="mental" min="0" max="100" value="50">
-    <div class="anchors"><span>小さい</span><span>大きい</span></div>
-  </div>
-
-  <!-- 身体的要求 -->
-  <div class="item">
-    <label for="physical">
-      身体的要求 (Physical Demand)
-      <span class="desc">
-        どの程度の身体的活動（押す、引く、回す、制倒する、動き回るなど）を必要としましたか.作業はラクでしたかキツかったですか、ゆっくりできましたかキビキビやらなければなりませんでしたか、休み休みできましたか働きづめでしたか.
-      </span>
-    </label>
-    <input type="range" id="physical" name="physical" min="0" max="100" value="50">
-    <div class="anchors"><span>小さい</span><span>大きい</span></div>
-  </div>
-
-  <!-- 時間的要求 -->
-  <div class="item">
-    <label for="temporal">
-      時間的要求 (Temporal Demand)
-      <span class="desc">
-        仕事のペースや課題が発生する頻度のために感じる時間的切迫感はどの程度でしたか. ペースはゆっくりとして余裕があるものでしたか, それとも速くて余裕のないものでしたか.
-      </span>
-    </label>
-    <input type="range" id="temporal" name="temporal" min="0" max="100" value="50">
-    <div class="anchors"><span>短い</span><span>長い</span></div>
-  </div>
-
-  <!-- 作業成績 -->
-  <div class="item">
-    <label for="performance">
-      作業成績 (Performance)
-      <span class="desc">
-        作業指示者（またはあなた自身）によって設定された課題の目標をどの程度達成できたと思いますか. 目標の達成に関して自分の作業成績にどの程度満足していますか.
-      </span>
-    </label>
-    <input type="range" id="performance" name="performance" min="0" max="100" value="50">
-    <div class="anchors"><span>良い</span><span>悪い</span></div>
-  </div>
-
-  <!-- 努力 -->
-  <div class="item">
-    <label for="effort">
-      努力 (Effort)
-      <span class="desc">
-        作業成績のレベルを達成・維持するために, 精神的・身体的にどの程度いっしょうけんめいに作業しなけれはなりませんでしたか.
-      </span>
-    </label>
-    <input type="range" id="effort" name="effort" min="0" max="100" value="50">
-    <div class="anchors"><span>少ない</span><span>多い</span></div>
-  </div>
-
-  <!-- 欲求不満 -->
-  <div class="item">
-    <label for="frustration">
-      欲求不満 (Frustration)
-      <span class="desc">
-        作業中に、不安感、落胆、いらいら、ストレス、悩みをどの程度感じましたか. あるいは逆に、安心感、満足感、充足感、楽しさ、リラックスをどの程度感じましたか.
-      </span>
-    </label>
-    <input type="range" id="frustration" name="frustration" min="0" max="100" value="50">
-    <div class="anchors"><span>低い</span><span>高い</span></div>
-  </div>
-
-  <!-- 全体的負荷 -->
-  <div class="item">
-    <label for="overall">
-      全体的負荷 (Overall Workload)
-      <span class="desc">
-        さまざまな負荷要因，負荷原因. 部分部分の課題内容を総合すると、全体としてどの程度の作業負担を感じましたか.
-      </span>
-    </label>
-    <input type="range" id="overall" name="overall" min="0" max="100" value="50">
-    <div class="anchors"><span>低い</span><span>高い</span></div>
-  </div>
-
-  <!-- ボタン -->
-  <button type="submit">結果をダウンロード</button>
-  <button type="button" id="resetBtn">リセット</button>
-</form>
-
-<!-- 参考文献 -->
-<p class="note">
-  参考文献：<br>
-  芳賀 繁・水上 洋介（1996）
-  「日本語版 NASA-TLX によるメンタルワークロード測定」
-  『産業・組織心理学研究』10(2).<br>
-  Hart, S. G. &amp; Staveland, L. E. (1988)
-  “Development of NASA-TLX (Task Load Index).” In
-  <em>Human Mental Workload</em>.
-</p>
-
-<script>
-  /* CSV生成・ダウンロード */
-  document.getElementById('tlxForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const id   = document.getElementById('userID').value.trim();
-    const vals = [
-      id,
-      document.getElementById('mental').value,
-      document.getElementById('physical').value,
-      document.getElementById('temporal').value,
-      document.getElementById('performance').value,
-      document.getElementById('effort').value,
-      document.getElementById('frustration').value,
-      document.getElementById('overall').value
-    ];
-
-    const headers = [
-      "ID","精神的要求","身体的要求","時間的要求",
-      "作業成績","努力","欲求不満","全体的負荷"
-    ];
-    const csv = headers.join(",") + "\r\n" + vals.join(",");
-
-    /* UTF-8 BOM 付きで Excel 文字化け防止 */
-    const bom  = new Uint8Array([0xEF,0xBB,0xBF]);
-    const blob = new Blob([bom, csv], { type: "text/csv" });
-
-    const a = document.createElement('a');
-    a.download = (id || "result") + ".csv";
-    a.href = URL.createObjectURL(blob);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-  });
-
-  /* リセット（確認付き） */
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (confirm('入力をリセットしてもよろしいですか？')) {
-      document.getElementById('tlxForm').reset();
-    }
-  });
-</script>
-
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
