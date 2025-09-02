@@ -50,6 +50,13 @@ export class SurveyApp {
         document.getElementById('uid-display').textContent = userInfo.uid;
         document.getElementById('condition-display').textContent = userInfo.condition;
         document.getElementById('method-display').textContent = userInfo.method;
+        if (userInfo.condition === 'finish') {
+            const methodEl = document.getElementById('method-display');
+            if (methodEl && methodEl.parentElement) {
+                // 手法の行（.info-item）のみ非表示
+                methodEl.parentElement.style.display = 'none';
+            }
+        }
     }
 
     // 現在のサーベイを表示
