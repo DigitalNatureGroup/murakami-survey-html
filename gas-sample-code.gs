@@ -2,14 +2,25 @@
 // このコードをGoogle Apps Scriptにコピーして使用してください
 
 function doPost(e) {
-  var lock = LockService.getDocumentLock();
+  var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
+    logToSheet('RAW_PARAMETER', e && e.parameter ? e.parameter : 'none');
+    logToSheet('RAW_POSTDATA', e && e.postData ? { type: e.postData.type, len: (e.postData.contents||'').length } : 'none');
+    logToSheet('FIELDS_PRECHECK', {
+      uid: e.parameter && e.parameter.uid,
+      task_state: e.parameter && e.parameter.task_state,
+      method: e.parameter && e.parameter.method,
+      group: e.parameter && e.parameter.group,
+      payloadLen: e.parameter && e.parameter.payload ? e.parameter.payload.length : 0
+    });
+
     var uid = (e.parameter.uid || '').trim();
-    var cond = (e.parameter.condition || '').trim();
+    var task_state = (e.parameter.task_state || '').trim();
     var method = (e.parameter.method || '').trim();
-    var payload = (e.parameter.payload || '').trim(); // ← 名前合わせる
-    if (!uid || !cond || !method || !payload) throw new Error('missing fields');
+    var group = (e.parameter.group || '').trim();
+    var payload = (e.parameter.payload || '').trim();
+    if (!uid || !task_state || !method || !group || !payload) throw new Error('missing fields');
 
     var data = JSON.parse(payload);
     
@@ -29,9 +40,10 @@ function doPost(e) {
       // 行配列をヘッダー順で作成
       var row = new Array(headers.length).fill('');
       row[0] = uid;
-      row[1] = cond;
+      row[1] = task_state;
       row[2] = method;
-      row[3] = timestamp;
+      row[3] = group;
+      row[4] = timestamp;
 
       for (var qid in surveyResults) {
         var colIndex = headers.indexOf(qid);
@@ -63,7 +75,7 @@ function doPost(e) {
 
 // 横持ちヘッダーを保証し、現在の完全なヘッダー配列を返す
 function ensureWideHeaders_(sheet, questionIds) {
-  var baseHeaders = ['UID','Condition','Method','Timestamp'];
+  var baseHeaders = ['UID','Task_State','Method','Group','Timestamp'];
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
 
@@ -128,8 +140,9 @@ function testDoPost() {
   var testData = {
     userInfo: {
       uid: "123",
-      condition: "interval",
-      method: "manual"
+      task_state: "interval",
+      method: "manual",
+      group: "mario"
     },
     results: {
       "nasa-tlx": {
@@ -147,12 +160,14 @@ function testDoPost() {
   
   var mockEvent = {
     parameter: {
-      uid: "123",
-      condition: "interval",
-      method: "manual",
-      payload: JSON.stringify(testData)
+      uid: testData.userInfo.uid,
+      task_state: testData.userInfo.task_state,
+      method: testData.userInfo.method,
+      group: testData.userInfo.group,
+      payload: JSON.stringify(testData)   // ←ここが重要
     }
   };
+
   
   var result = doPost(mockEvent);
   Logger.log(result.getContent());
@@ -163,4 +178,16 @@ function testDoPost() {
     var sh = ss.getSheetByName(name);
     if (sh) Logger.log(name + ' rows: ' + sh.getLastRow());
   });
+}
+
+const SPREADSHEET_ID = '1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ';
+const DEBUG_SHEET = 'DEBUG_LOG';
+
+function logToSheet(tag, obj) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sh = ss.getSheetByName(DEBUG_SHEET) || ss.insertSheet(DEBUG_SHEET);
+    const s = (typeof obj === 'object') ? JSON.stringify(obj, null, 2) : String(obj);
+    sh.appendRow([new Date().toISOString(), tag, s]);
+  } catch (_) {}
 }

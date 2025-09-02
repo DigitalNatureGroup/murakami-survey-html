@@ -16,40 +16,90 @@ const PORT = process.env.PORT || 3000;
 
 // JSONボディパーサー
 app.use(express.json());
+// ← フォーム（x-www-form-urlencoded）も必ずパースする
+app.use(express.urlencoded({ extended: false }));
 
 // 静的ファイルの配信
 app.use(express.static(__dirname));
 
 // プロキシエンドポイント
-app.post('/api/submit', async (req, res) => {
-  try {
-    console.log('受信データ:', req.body);
-    
-    const gasUrl = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbyQ3lNZD8-Qc9i748yBAH-N6OqmGdhbkLXnBYPJhM0tMQcqqI7sjJDh_KA-HgXIb91Pyw/exec';
-    
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        uid: req.body.uid,
-        condition: req.body.condition,
-        method: req.body.method,
-        payload: JSON.stringify(req.body.payload)
-      })
-    });
-    
-    const text = await response.text();
-    console.log('GAS応答:', text);
-    
-    // GASの応答をそのまま返す
-    res.status(response.status).send(text);
-  } catch (err) {
-    console.error('エラー:', err);
-    res.status(500).json({ error: String(err) });
+app.post(
+  '/api/submit',
+  // 1) このルートだけ raw 文字列も受け取れるようにする
+  express.text({ type: '*/*' }),
+  async (req, res) => {
+    try {
+      // --- 受信の可視化 ---
+      const ct = req.headers['content-type'] || '';
+      console.log('client->proxy content-type:', ct);
+
+      let bodyObj = {};
+
+      if (ct.includes('application/x-www-form-urlencoded')) {
+        // fetch で URLSearchParams を送ってくる想定
+        // → 文字列なら手動でパース、オブジェクトならそのまま
+        if (typeof req.body === 'string' && req.body.length) {
+          bodyObj = Object.fromEntries(new URLSearchParams(req.body));
+        } else if (req.body && typeof req.body === 'object') {
+          bodyObj = req.body;
+        }
+      } else if (ct.includes('application/json')) {
+        // JSON 送信の場合（保険）
+        if (typeof req.body === 'string' && req.body.length) {
+          bodyObj = JSON.parse(req.body);
+        } else if (req.body && typeof req.body === 'object') {
+          bodyObj = req.body;
+        }
+      } else {
+        // 不明な場合も文字列なら試しに form として解釈
+        if (typeof req.body === 'string' && req.body.length) {
+          try {
+            bodyObj = Object.fromEntries(new URLSearchParams(req.body));
+          } catch (_) {}
+        }
+      }
+
+      console.log('client->proxy parsed keys:', Object.keys(bodyObj || {}));
+      console.log('client->proxy parsed body:', bodyObj);
+
+      // 必須キーが無ければ 400 を返して早期発見
+      const { uid, task_state, method, group } = bodyObj || {};
+      if (!uid || !task_state || !method || !group || !bodyObj.payload) {
+        return res.status(400).json({ error: 'missing fields at proxy', got: bodyObj });
+      }
+
+      // payload は「文字列ならそのまま」「オブジェクトなら stringify」
+      const payloadStr =
+        typeof bodyObj.payload === 'string' ? bodyObj.payload : JSON.stringify(bodyObj.payload);
+
+      // 2) GAS へは “必ず” フォームとして再送
+      const params = new URLSearchParams({
+        uid,
+        task_state,
+        method,
+        group,
+        payload: payloadStr
+      }).toString();
+
+      const gasUrl =
+        process.env.GAS_URL ||
+        'https://script.google.com/macros/s/AKfycbyQ3lNZD8-Qc9i748yBAH-N6OqmGdhbkLXnBYPJhM0tMQcqqI7sjJDh_KA-HgXIb91Pyw/exec';
+
+      const r = await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: params
+      });
+
+      const text = await r.text();
+      console.log('GAS応答 status:', r.status);
+      res.status(r.status).send(text);
+    } catch (err) {
+      console.error('proxy error:', err);
+      res.status(500).json({ error: String(err) });
+    }
   }
-});
+);
 
 // フォールバック保存: サーバーに participant-data を作成し追記
 app.post('/api/fallback-save', async (req, res) => {

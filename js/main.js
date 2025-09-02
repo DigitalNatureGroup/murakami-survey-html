@@ -1,12 +1,11 @@
 console.log('ACTIVE main.js @', new Date().toISOString());
 // すべてのインポートを集約
 import { SurveyManager } from './survey-manager.js';
-import { SURVEY_SETS, GAS_ENDPOINT, METHOD_CODE_MAP } from './survey-config.js';
+import { SURVEY_SETS, METHOD_CODE_MAP } from './survey-config.js';
 import { GASSender } from './gas-sender.js';
 
 // グローバル変数として設定（他のモジュールから参照可能にするため）
 window.SURVEY_SETS = SURVEY_SETS;
-window.GAS_ENDPOINT = GAS_ENDPOINT;
 
 console.log('main.js: すべてのインポート完了');
 
@@ -49,9 +48,9 @@ export class SurveyApp {
     // ユーザー情報を表示
     displayUserInfo(userInfo) {
         document.getElementById('uid-display').textContent = userInfo.uid;
-        document.getElementById('condition-display').textContent = userInfo.condition;
+        document.getElementById('condition-display').textContent = userInfo.task_state;
         document.getElementById('method-display').textContent = userInfo.method;
-        if (userInfo.condition === 'finish') {
+        if (userInfo.task_state === 'complete') {
             const methodEl = document.getElementById('method-display');
             if (methodEl && methodEl.parentElement) {
                 // 手法の行（.info-item）のみ非表示
@@ -333,7 +332,7 @@ export class SurveyApp {
             console.log('送信結果:', result);
 
             // 成功画面を表示（上: 成功文面 / 下: パスワード）
-            const isInterval = data.userInfo.condition === 'interval';
+            const isInterval = data.userInfo.task_state === 'interval';
             const msg = isInterval
                 ? '結果が正常に送信されました。'
                 : '結果が正常に送信されました。ご協力ありがとうございました。';

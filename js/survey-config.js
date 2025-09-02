@@ -24,8 +24,7 @@ export const SURVEY_SETS = {
     }
 };
 
-// GASのエンドポイント設定
-export const GAS_ENDPOINT = "YOUR_GAS_ENDPOINT_URL_HERE"; // 実際のGASのURLに置き換えてください 
+ 
 
 // methodごとの固定4桁コード設定
 export const METHOD_CODE_MAP = {

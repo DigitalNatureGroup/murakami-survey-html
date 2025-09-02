@@ -1,7 +1,7 @@
 // GAS送信クラス（設定・状態管理を内包）
 const GAS_CONFIG = {
     TIMEOUT: 60000,
-    RETRY_COUNT: 3
+    RETRY_COUNT: 1
 };
 
 class GASSubmissionManager {
@@ -74,7 +74,7 @@ export class GASSender {
             throw new Error('データ形式が不正です');
         }
         
-        if (!data.userInfo.uid || !data.userInfo.condition || !data.userInfo.method) {
+        if (!data.userInfo.uid || !data.userInfo.task_state || !data.userInfo.method || !data.userInfo.group) {
             throw new Error('ユーザー情報が不完全です');
         }
         
@@ -129,13 +129,14 @@ export class GASSender {
                 const response = await fetch('/api/submit', {
                     method: 'POST',
                     headers: { 
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    body: JSON.stringify({
+                    body: new URLSearchParams({
                         uid: data.userInfo.uid,
-                        condition: data.userInfo.condition,
+                        task_state: data.userInfo.task_state,
                         method: data.userInfo.method,
-                        payload: data
+                        group: data.userInfo.group,
+                        payload: JSON.stringify(data) // ← 文字列化して1フィールドに詰める
                     })
                 });
                 

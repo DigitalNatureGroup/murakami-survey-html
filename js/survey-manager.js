@@ -1,28 +1,38 @@
 // サーベイ管理クラス
+import { GASSender } from './gas-sender.js';
+
 export class SurveyManager {
     constructor() {
         this.currentSet = null;
         this.currentSurveyIndex = 0;
         this.results = {};
         this.userInfo = {};
+        this.gasSender = new GASSender();
     }
 
     // URLパラメータからユーザー情報を取得
     parseUserInfo() {
         const urlParams = new URLSearchParams(window.location.search);
         const uid = urlParams.get('uid');
-        const condition = urlParams.get('condition');
+        const task_state = urlParams.get('task_state');
         const method = urlParams.get('method');
+        const group = urlParams.get('group');
 
-        if (!uid || !condition || !method) {
+        if (!uid || !task_state || !method || !group) {
             throw new Error('必要なパラメータが不足しています');
+        }
+
+        // groupの検証（"mario" または "design"）
+        const allowedGroups = ['mario', 'design'];
+        if (!allowedGroups.includes(group)) {
+            throw new Error('無効なgroupです（mario または design を指定）');
         }
 
         // 条件に基づいてセットを決定
         let setKey;
-        if (condition === 'interval') {
+        if (task_state === 'interval') {
             setKey = 'set1';
-        } else if (condition === 'finish') {
+        } else if (task_state === 'complete') {
             setKey = 'set2';
         } else {
             throw new Error('無効な条件です');
@@ -30,9 +40,10 @@ export class SurveyManager {
 
         this.userInfo = {
             uid: uid,
-            condition: condition,
+            task_state: task_state,
             method: method,
-            setKey: setKey
+            setKey: setKey,
+            group: group
         };
 
         return this.userInfo;
@@ -90,30 +101,13 @@ export class SurveyManager {
             timestamp: new Date().toISOString()
         };
     }
+    
+
 
     // GASに結果を送信
     async submitToGAS() {
         const data = this.getAllResults();
-        
-        try {
-            const response = await fetch(window.GAS_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('GAS送信エラー:', error);
-            throw error;
-        }
+        return await this.gasSender.submitData(data); // ← リトライ/履歴/フォールバック込み
     }
 
     // サーベイが完了したかチェック
