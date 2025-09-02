@@ -103,7 +103,7 @@ export class SurveyApp {
     // 質問のHTMLを生成
     createQuestionHTML(question) {
         let html = `
-            <div class="form-group">
+            <div class="form-group question-block">
         `;
         if (question.label) {
             html += `<label for="${question.id}">${question.label}</label>`;
@@ -119,6 +119,16 @@ export class SurveyApp {
                     <input id="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
                     <div class="tlx-ticks" aria-hidden="true"></div>
                     <div class="tlx-anchors"><span>${question.anchors[0]}</span><span>${question.anchors[1]}</span></div>
+                </div>
+            `;
+        } else if (question.type === 'section') {
+            const sid = `${question.id}-title`;
+            html += `
+                <div class="survey-section" role="separator" aria-labelledby="${sid}">
+                    <div class="section-bar">
+                        <h3 id="${sid}" class="section-title">${question.title ?? ''}</h3>
+                    </div>
+                    ${question.note ? `<p class="section-note">${question.note}</p>` : ''}
                 </div>
             `;
         } else if (question.type === 'ueq7') {
