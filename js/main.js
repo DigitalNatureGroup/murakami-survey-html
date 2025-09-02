@@ -151,20 +151,42 @@ export class SurveyApp {
                           ${question.required ? 'required' : ''}></textarea>
             `;
         } else if (question.type === 'radio') {
-            question.options.forEach(option => {
-                html += `
-                    <div style="margin: 8px 0;">
-                        <input type="radio" 
-                               id="${question.id}_${option.value}" 
-                               name="${question.id}" 
+            // SUS風（5点法ドット＋テキスト）: SUS質問 または 明示フラグ ui==='sus'
+            if ((question.id && question.id.startsWith('sus')) || question.ui === 'sus') {
+                const name = question.id;
+                const radios = question.options.map((option, i) => `
+                    <label class="sus-dot" for="${name}_${option.value}">
+                        <input type="radio"
+                               id="${name}_${option.value}"
+                               name="${name}"
                                value="${option.value}"
-                               ${question.required ? 'required' : ''}>
-                        <label for="${question.id}_${option.value}" style="font-weight: normal; margin-left: 8px;">
-                            ${option.label}
-                        </label>
+                               ${i === 0 && question.required ? 'required' : ''}
+                               aria-label="${option.label}">
+                        <span class="sus-text">${option.label}</span>
+                    </label>
+                `).join('');
+
+                html += `
+                    <div class="sus-scale" role="radiogroup" aria-label="SUS 1～5">
+                        ${radios}
                     </div>
                 `;
-            });
+            } else {
+                html += `<div class="likert-group">`;
+                question.options.forEach((option, i) => {
+                    html += `
+                        <label class="likert-option" for="${question.id}_${option.value}">
+                            <input type="radio"
+                                   id="${question.id}_${option.value}"
+                                   name="${question.id}"
+                                   value="${option.value}"
+                                   ${i === 0 && question.required ? 'required' : ''}>
+                            <span>${option.label}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            }
         } else if (question.type === 'select') {
             html += `<select id="${question.id}" name="${question.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
             question.options.forEach(option => {

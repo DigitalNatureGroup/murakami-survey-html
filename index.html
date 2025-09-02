@@ -233,6 +233,19 @@
         .ueq-choice { display:inline-flex; align-items:center; justify-content:center; padding:6px; cursor:pointer; }
         .ueq-choice input[type="radio"] { pointer-events:none; }
         .ueq-help { font-size:12px; color:#666; margin:-6px 0 8px; }
+        /* SUS用 Likert 横並び（クリック面拡大） */
+        .likert-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .likert-option { display:inline-flex; align-items:center; justify-content:center; min-width: 44px; min-height: 36px; padding: 6px 10px; border:1px solid #ccc; border-radius:6px; cursor:pointer; }
+        .likert-option input[type="radio"] { appearance:none; width:14px; height:14px; border:2px solid #666; border-radius:50%; margin-right:8px; pointer-events:none; }
+        .likert-option input[type="radio"]:checked { background:#333; border-color:#333; }
+        .likert-option:hover { background:#f6f6f6; }
+        /* SUS 5点法: ドット + 説明 */
+        .sus-scale { display:flex; gap:14px; align-items:center; margin-top:8px; }
+        .sus-dot { display:inline-flex; align-items:center; justify-content:center; padding:6px; cursor:pointer; }
+        .sus-dot input[type="radio"] { appearance:none; width:14px; height:14px; border:2px solid #666; border-radius:50%; pointer-events:none; margin-right:8px; }
+        .sus-text { font-size:12px; color:#555; }
+        .sus-dot input[type="radio"]:checked { background:#333; border-color:#333; }
+        .sus-anchors { font-size:12px; color:#666; margin-top:6px; }
     </style>
 </head>
 <body>
