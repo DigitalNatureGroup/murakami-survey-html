@@ -31,6 +31,6 @@ export const METHOD_CODE_MAP = {
     // 必要に応じて値を変更してください
     'manual': '1432',
     'bo': '2635',
-    'glv-bo': '3626',
+    'glv_bo_hybrid': '3626',
     'cma-es': '4559'
 };

@@ -434,10 +434,78 @@ export class SurveyApp {
                 <div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding:24px; text-align:center;">
                     <div style="font-size:56px; font-weight:800; letter-spacing:8px; margin:8px 0 12px;">${code}</div>
                     <div style="font-size:14px; color:#555;">この4桁のパスワードを次のシステムに入力してください</div>
+                    <button id="copy-and-close-btn" style="margin-top: 24px; padding: 16px 32px; font-size: 18px; font-weight: 600; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007bff'">
+                        コピーしてタブを閉じる
+                    </button>
                 </div>
             `;
         }
         container.innerHTML = html;
+        
+        // ボタンのイベントリスナーを設定
+        if (typeof code === 'string' && code.length > 0) {
+            const copyAndCloseBtn = document.getElementById('copy-and-close-btn');
+            if (copyAndCloseBtn) {
+                copyAndCloseBtn.addEventListener('click', () => {
+                    this.copyCodeAndCloseTab(code);
+                });
+            }
+        }
+    }
+    
+    // パスワードをコピーしてタブを閉じる
+    copyCodeAndCloseTab(code) {
+        try {
+            // パスワードをクリップボードにコピー
+            navigator.clipboard.writeText(code).then(() => {
+                // コピー成功のフィードバック
+                const btn = document.getElementById('copy-and-close-btn');
+                if (btn) {
+                    btn.textContent = 'コピー完了！';
+                    btn.style.backgroundColor = '#28a745';
+                    btn.disabled = true;
+                    
+                    // 1秒後にタブを閉じる
+                    setTimeout(() => {
+                        window.close();
+                        // window.close()が動作しない場合の代替手段
+                        if (!window.closed) {
+                            // ユーザーに手動で閉じるよう案内
+                            btn.textContent = 'タブを手動で閉じてください';
+                            btn.style.backgroundColor = '#6c757d';
+                        }
+                    }, 1000);
+                }
+            }).catch(err => {
+                console.error('クリップボードへのコピーに失敗:', err);
+                // フォールバック: 古いブラウザ対応
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // 成功した場合と同じ処理
+                const btn = document.getElementById('copy-and-close-btn');
+                if (btn) {
+                    btn.textContent = 'コピー完了！';
+                    btn.style.backgroundColor = '#28a745';
+                    btn.disabled = true;
+                    
+                    setTimeout(() => {
+                        window.close();
+                        if (!window.closed) {
+                            btn.textContent = 'タブを手動で閉じてください';
+                            btn.style.backgroundColor = '#6c757d';
+                        }
+                    }, 1000);
+                }
+            });
+        } catch (error) {
+            console.error('エラーが発生しました:', error);
+            alert('エラーが発生しました: ' + error.message);
+        }
     }
 
     // showFinalScreen は未使用（レイアウト統一のため showSuccess に集約）

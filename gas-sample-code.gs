@@ -1,43 +1,38 @@
-// Google Apps Script (GAS) サンプルコード
-// このコードをGoogle Apps Scriptにコピーして使用してください
+/***** Config *****/
+const SPREADSHEET_ID = '1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ';
+const BASE_HEADERS    = ['UID', 'Task_State', 'Method', 'Group', 'Timestamp'];
+const LOCK_TIMEOUT    = 30000;
 
+/***** Entry *****/
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(30000);
+  lock.waitLock(LOCK_TIMEOUT);
   try {
-    logToSheet('RAW_PARAMETER', e && e.parameter ? e.parameter : 'none');
-    logToSheet('RAW_POSTDATA', e && e.postData ? { type: e.postData.type, len: (e.postData.contents||'').length } : 'none');
-    logToSheet('FIELDS_PRECHECK', {
-      uid: e.parameter && e.parameter.uid,
-      task_state: e.parameter && e.parameter.task_state,
-      method: e.parameter && e.parameter.method,
-      group: e.parameter && e.parameter.group,
-      payloadLen: e.parameter && e.parameter.payload ? e.parameter.payload.length : 0
-    });
-
-    var uid = (e.parameter.uid || '').trim();
+    // 方式A: application/x-www-form-urlencoded 前提
+    var uid        = (e.parameter.uid || '').trim();
     var task_state = (e.parameter.task_state || '').trim();
-    var method = (e.parameter.method || '').trim();
-    var group = (e.parameter.group || '').trim();
-    var payload = (e.parameter.payload || '').trim();
-    if (!uid || !task_state || !method || !group || !payload) throw new Error('missing fields');
+    var method     = (e.parameter.method || '').trim();
+    var group      = (e.parameter.group || '').trim();
+    var payloadStr = (e.parameter.payload || '').trim();
 
-    var data = JSON.parse(payload);
-    
-    // サーベイごとに横持ち1行で保存（質問IDを列として展開）
-    var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
+    if (!uid || !task_state || !method || !group || !payloadStr) {
+      throw new Error('missing fields');
+    }
+
+    var data = JSON.parse(payloadStr); // payload は JSON 文字列で受け取る前提
+    if (!data.results || typeof data.results !== 'object') {
+      throw new Error('invalid payload');
+    }
+
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var timestamp = new Date().toISOString();
 
     for (var surveyId in data.results) {
-      var surveyResults = data.results[surveyId];
-      var sh = ss.getSheetByName(surveyId);
-      if (!sh) {
-        sh = ss.insertSheet(surveyId);
-      }
+      var surveyResults = data.results[surveyId]; // { q1: '...', ... }
+      var sh = ss.getSheetByName(surveyId) || ss.insertSheet(surveyId);
 
       var headers = ensureWideHeaders_(sh, Object.keys(surveyResults));
 
-      // 行配列をヘッダー順で作成
       var row = new Array(headers.length).fill('');
       row[0] = uid;
       row[1] = task_state;
@@ -46,148 +41,68 @@ function doPost(e) {
       row[4] = timestamp;
 
       for (var qid in surveyResults) {
-        var colIndex = headers.indexOf(qid);
-        if (colIndex === -1) {
-          // 念のため（通常はensureWideHeaders_で存在する）
+        var idx = headers.indexOf(qid);
+        if (idx === -1) {
           headers = ensureWideHeaders_(sh, [qid]);
-          colIndex = headers.indexOf(qid);
-          // 必要に応じてrow配列を拡張
-          if (row.length < headers.length) {
-            row.length = headers.length;
-            for (var i = 0; i < headers.length; i++) if (typeof row[i] === 'undefined') row[i] = '';
-          }
+          idx = headers.indexOf(qid);
+          if (row.length < headers.length) row.length = headers.length;
         }
-        row[colIndex] = surveyResults[qid];
+        var v = surveyResults[qid];
+        row[idx] = (v !== null && typeof v === 'object') ? JSON.stringify(v) : String(v);
       }
 
-      sh.getRange(sh.getLastRow()+1, 1, 1, headers.length).setValues([row]);
+      sh.getRange(sh.getLastRow() + 1, 1, 1, headers.length).setValues([row]);
     }
 
-    // 完了ページ（HTML）で4桁コード等を表示
-    var t = HtmlService.createHtmlOutput('<h2>送信完了</h2><p>ありがとうございました。</p>');
-    return t.setTitle('完了');
+    return HtmlService.createHtmlOutput('<h2>送信完了</h2><p>ありがとうございました。</p>').setTitle('完了');
+
   } catch (err) {
-    return HtmlService.createHtmlOutput('<h2>エラー</h2><pre>'+String(err)+'</pre>');
+    return HtmlService.createHtmlOutput('<h2>エラー</h2><pre>' + String(err) + '</pre>');
   } finally {
-    try { lock.releaseLock(); } catch (e) {}
+    try { lock.releaseLock(); } catch (_) {}
   }
 }
 
-// 横持ちヘッダーを保証し、現在の完全なヘッダー配列を返す
+/***** Helpers *****/
 function ensureWideHeaders_(sheet, questionIds) {
-  var baseHeaders = ['UID','Task_State','Method','Group','Timestamp'];
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
+  var current = [];
 
-  var currentHeaders = [];
   if (lastRow >= 1 && lastCol >= 1) {
-    currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    current = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   }
 
-  if (currentHeaders.length === 0) {
-    // 初期作成: ベース + 今回の質問ID
-    var newHeaders = baseHeaders.concat(questionIds);
+  if (current.length === 0) {
+    var newHeaders = BASE_HEADERS.concat(questionIds);
     sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
     styleHeader_(sheet, newHeaders.length);
     return newHeaders;
   }
 
-  // ベースヘッダーの不足を補完（既存のブックを安全に移行）
-  baseHeaders.forEach(function(h, idx){
-    if (currentHeaders[idx] !== h) {
-      // 先頭からベースヘッダーを強制整列
-      currentHeaders = baseHeaders.concat(currentHeaders.filter(function(x){ return baseHeaders.indexOf(x) === -1; }));
-      sheet.clearContents();
-      sheet.getRange(1, 1, 1, currentHeaders.length).setValues([currentHeaders]);
-      styleHeader_(sheet, currentHeaders.length);
-    }
-  });
+  // 先頭にベース項目を揃える
+  var normalized = BASE_HEADERS.concat(current.filter(function(h){ return BASE_HEADERS.indexOf(h) === -1; }));
+  if (normalized.length !== current.length || normalized.some(function(h,i){ return h !== current[i]; })) {
+    sheet.clearContents();
+    sheet.getRange(1, 1, 1, normalized.length).setValues([normalized]);
+    styleHeader_(sheet, normalized.length);
+  }
 
   // 新しい質問IDを末尾に追加
   var appended = false;
   questionIds.forEach(function(q){
-    if (currentHeaders.indexOf(q) === -1) {
-      currentHeaders.push(q);
-      appended = true;
-    }
+    if (normalized.indexOf(q) === -1) { normalized.push(q); appended = true; }
   });
   if (appended) {
-    sheet.getRange(1, 1, 1, currentHeaders.length).setValues([currentHeaders]);
-    styleHeader_(sheet, currentHeaders.length);
+    sheet.getRange(1, 1, 1, normalized.length).setValues([normalized]);
+    styleHeader_(sheet, normalized.length);
   }
 
-  return currentHeaders;
+  return normalized;
 }
 
-// スプレッドシートの初期設定
-function setupSpreadsheet() {
-  var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
-  var sh = ss.getSheetByName('README') || ss.insertSheet('README');
-  if (sh.getLastRow() === 0) {
-    sh.getRange(1,1).setValue('各サーベイID（例: nasa-tlx, sus）ごとに別シートに横持ち1行で保存されます。');
-  }
-}
-
-// ヘッダー行の設定（サーベイ個別シート用）
 function styleHeader_(sheet, numCols) {
   sheet.getRange(1, 1, 1, numCols)
-    .setFontWeight('bold')
-    .setBackground('#f0f0f0');
-}
-
-// テスト用関数
-function testDoPost() {
-  var testData = {
-    userInfo: {
-      uid: "123",
-      task_state: "interval",
-      method: "manual",
-      group: "mario"
-    },
-    results: {
-      "nasa-tlx": {
-        "mental": "50",
-        "physical": "30",
-        "temporal": "40"
-      },
-      "sus": {
-        "sus1": "4",
-        "sus2": "2"
-      }
-    },
-    timestamp: new Date().toISOString()
-  };
-  
-  var mockEvent = {
-    parameter: {
-      uid: testData.userInfo.uid,
-      task_state: testData.userInfo.task_state,
-      method: testData.userInfo.method,
-      group: testData.userInfo.group,
-      payload: JSON.stringify(testData)   // ←ここが重要
-    }
-  };
-
-  
-  var result = doPost(mockEvent);
-  Logger.log(result.getContent());
-  // 追加ログ: 各シートの最終行数を確認
-  var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
-  var sheets = ['nasa-tlx', 'sus'];
-  sheets.forEach(function(name){
-    var sh = ss.getSheetByName(name);
-    if (sh) Logger.log(name + ' rows: ' + sh.getLastRow());
-  });
-}
-
-const SPREADSHEET_ID = '1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ';
-const DEBUG_SHEET = 'DEBUG_LOG';
-
-function logToSheet(tag, obj) {
-  try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sh = ss.getSheetByName(DEBUG_SHEET) || ss.insertSheet(DEBUG_SHEET);
-    const s = (typeof obj === 'object') ? JSON.stringify(obj, null, 2) : String(obj);
-    sh.appendRow([new Date().toISOString(), tag, s]);
-  } catch (_) {}
+       .setFontWeight('bold')
+       .setBackground('#f0f0f0');
 }
