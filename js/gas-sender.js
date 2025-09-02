@@ -1,5 +1,29 @@
-// GAS送信クラス
-import { GAS_CONFIG, GASSubmissionManager } from './gas-config.js';
+// GAS送信クラス（設定・状態管理を内包）
+const GAS_CONFIG = {
+    TIMEOUT: 60000,
+    RETRY_COUNT: 3
+};
+
+class GASSubmissionManager {
+    constructor() {
+        this.isSubmitting = false;
+        this.submissionHistory = [];
+    }
+
+    getSubmissionStatus() {
+        return {
+            isSubmitting: this.isSubmitting,
+            history: this.submissionHistory
+        };
+    }
+
+    addToHistory(entry) {
+        this.submissionHistory.push({
+            ...entry,
+            timestamp: new Date().toISOString()
+        });
+    }
+}
 
 export class GASSender {
     constructor() {

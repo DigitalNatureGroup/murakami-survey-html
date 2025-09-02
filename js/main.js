@@ -124,7 +124,7 @@ export class SurveyApp {
         if (question.type === 'range') {
             html += `
                 <div class="tlx-field" data-ticks="10">
-                    <input id="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
+                    <input id="${question.id}" name="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
                     <div class="tlx-ticks" aria-hidden="true"></div>
                     <div class="tlx-anchors"><span>${question.anchors[0]}</span><span>${question.anchors[1]}</span></div>
                 </div>
