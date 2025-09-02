@@ -80,6 +80,22 @@ export class SurveyApp {
 
         container.innerHTML = html;
 
+        // 目盛り生成（.tlx-field ごとに data-ticks 分割で生成）
+        (function renderAllTicks(){
+            const fields = container.querySelectorAll('.tlx-field');
+            fields.forEach(field => {
+                const ticksContainer = field.querySelector('.tlx-ticks');
+                if (!ticksContainer) return;
+                const divisions = Number(field.getAttribute('data-ticks') || 10);
+                ticksContainer.innerHTML = '';
+                for (let i = 0; i <= divisions; i++) {
+                    const tick = document.createElement('span');
+                    tick.className = 'tick';
+                    ticksContainer.appendChild(tick);
+                }
+            });
+        })();
+
         // ボタンの表示/非表示を制御
         this.updateButtonVisibility();
     }
@@ -97,16 +113,11 @@ export class SurveyApp {
 
         if (question.type === 'range') {
             html += `
-                <input type="range" 
-                       id="${question.id}" 
-                       name="${question.id}" 
-                       min="${question.min}" 
-                       max="${question.max}" 
-                       value="${question.defaultValue}"
-                       ${question.required ? 'required' : ''}>
-                <div class="range-labels">
-                    <span>${question.anchors[0]}</span>
-                    <span>${question.anchors[1]}</span>
+                <div class="tlx-field" data-ticks="10">
+                    <label class="tlx-label" for="${question.id}">${question.label}</label>
+                    <input id="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
+                    <div class="tlx-ticks" aria-hidden="true"></div>
+                    <div class="tlx-anchors"><span>${question.anchors[0]}</span><span>${question.anchors[1]}</span></div>
                 </div>
             `;
         } else if (question.type === 'text') {

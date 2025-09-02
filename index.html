@@ -130,6 +130,28 @@
             color: #666;
             margin-top: 5px;
         }
+        /* TLX simple ticks layer */
+        .tlx-field{margin:16px 0}
+        .tlx-label{display:block;margin-bottom:8px}
+        .tlx-range{width:100%}
+        .tlx-ticks{
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 0;
+            margin-top: 8px;
+            padding: 0 2px;
+            height: 10px;
+        }
+        .tlx-ticks::before{
+            content:"";
+            position:absolute;
+            left:0; right:0; top:50%;
+            height:2px; background:#d0d0d0;
+            transform: translateY(-50%);
+        }
+        .tlx-ticks .tick{ width:1px; height:8px; background:#888; align-self:center; }
+        .tlx-anchors{display:flex;justify-content:space-between;font-size:12px;margin-top:6px}
         
         .buttons {
             text-align: center;
