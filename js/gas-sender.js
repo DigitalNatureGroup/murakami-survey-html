@@ -107,6 +107,17 @@ export class GASSender {
             }
         }
         
+        // 全試行失敗 → フォールバックとしてサーバーへローカル保存を依頼
+        try {
+            await fetch('/api/fallback-save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            console.warn('フォールバック保存を実行しました');
+        } catch (fallbackError) {
+            console.error('フォールバック保存も失敗:', fallbackError);
+        }
         throw new Error(`送信に失敗しました (${GAS_CONFIG.RETRY_COUNT}回試行): ${lastError.message}`);
     }
     

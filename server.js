@@ -2,6 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 // 環境変数を読み込み
@@ -46,6 +47,24 @@ app.post('/api/submit', async (req, res) => {
     res.status(response.status).send(text);
   } catch (err) {
     console.error('エラー:', err);
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// フォールバック保存: サーバーに participant-data を作成し追記
+app.post('/api/fallback-save', async (req, res) => {
+  try {
+    const dir = join(__dirname, 'participant-data');
+    const file = join(dir, 'submissions.ndjson');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    const record = {
+      timestamp: new Date().toISOString(),
+      payload: req.body
+    };
+    fs.appendFileSync(file, JSON.stringify(record) + '\n', 'utf8');
+    res.json({ status: 'saved' });
+  } catch (err) {
+    console.error('フォールバック保存エラー:', err);
     res.status(500).json({ error: String(err) });
   }
 });

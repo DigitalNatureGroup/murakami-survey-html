@@ -2,6 +2,8 @@
 // このコードをGoogle Apps Scriptにコピーして使用してください
 
 function doPost(e) {
+  var lock = LockService.getDocumentLock();
+  lock.waitLock(30000);
   try {
     var uid = (e.parameter.uid || '').trim();
     var cond = (e.parameter.condition || '').trim();
@@ -54,6 +56,8 @@ function doPost(e) {
     return t.setTitle('完了');
   } catch (err) {
     return HtmlService.createHtmlOutput('<h2>エラー</h2><pre>'+String(err)+'</pre>');
+  } finally {
+    try { lock.releaseLock(); } catch (e) {}
   }
 }
 
