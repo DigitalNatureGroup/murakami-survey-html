@@ -10,10 +10,10 @@ export const SURVEY_SETS = {
     "set1": {
         name: "セット1",
         surveys: [
+            originalSurvey,
             ueqShortSurvey,
             susSurvey,
-            nasaTlxSurvey,
-            originalSurvey
+            nasaTlxSurvey
         ]
     },
     "set2": {

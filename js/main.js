@@ -151,8 +151,8 @@ export class SurveyApp {
                           ${question.required ? 'required' : ''}></textarea>
             `;
         } else if (question.type === 'radio') {
-            // SUS風（5点法ドット＋テキスト）: SUS質問 または 明示フラグ ui==='sus'
-            if ((question.id && question.id.startsWith('sus')) || question.ui === 'sus') {
+            // Likert汎用UI（5点法ドット＋テキスト）: 明示フラグ ui==='likert' のみで判定
+            if (question.ui === 'likert') {
                 const name = question.id;
                 const radios = question.options.map((option, i) => `
                     <label class="sus-dot" for="${name}_${option.value}">
