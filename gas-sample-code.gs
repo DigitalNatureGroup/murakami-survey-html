@@ -10,12 +10,44 @@ function doPost(e) {
     if (!uid || !cond || !method || !payload) throw new Error('missing fields');
 
     var data = JSON.parse(payload);
-
-    // 複数行の保存: rows = [ [..7列..], [..], ... ]
-    var rows = buildRows_(uid, cond, method, data);  // 行配列を作る関数（任意実装）
+    
+    // サーベイごとに横持ち1行で保存（質問IDを列として展開）
     var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
-    var sh = ss.getSheetByName('hummingbird-survey') || ss.insertSheet('hummingbird-survey');
-    sh.getRange(sh.getLastRow()+1, 1, rows.length, rows[0].length).setValues(rows);
+    var timestamp = new Date().toISOString();
+
+    for (var surveyId in data.results) {
+      var surveyResults = data.results[surveyId];
+      var sh = ss.getSheetByName(surveyId);
+      if (!sh) {
+        sh = ss.insertSheet(surveyId);
+      }
+
+      var headers = ensureWideHeaders_(sh, Object.keys(surveyResults));
+
+      // 行配列をヘッダー順で作成
+      var row = new Array(headers.length).fill('');
+      row[0] = uid;
+      row[1] = cond;
+      row[2] = method;
+      row[3] = timestamp;
+
+      for (var qid in surveyResults) {
+        var colIndex = headers.indexOf(qid);
+        if (colIndex === -1) {
+          // 念のため（通常はensureWideHeaders_で存在する）
+          headers = ensureWideHeaders_(sh, [qid]);
+          colIndex = headers.indexOf(qid);
+          // 必要に応じてrow配列を拡張
+          if (row.length < headers.length) {
+            row.length = headers.length;
+            for (var i = 0; i < headers.length; i++) if (typeof row[i] === 'undefined') row[i] = '';
+          }
+        }
+        row[colIndex] = surveyResults[qid];
+      }
+
+      sh.getRange(sh.getLastRow()+1, 1, 1, headers.length).setValues([row]);
+    }
 
     // 完了ページ（HTML）で4桁コード等を表示
     var t = HtmlService.createHtmlOutput('<h2>送信完了</h2><p>ありがとうございました。</p>');
@@ -25,53 +57,64 @@ function doPost(e) {
   }
 }
 
-// 行配列を作る関数
-function buildRows_(uid, cond, method, data) {
-  var rows = [];
-  var timestamp = new Date().toISOString();
-  
-  // 各サーベイの結果を処理
-  for (var surveyId in data.results) {
-    var surveyResults = data.results[surveyId];
-    
-    for (var questionId in surveyResults) {
-      var value = surveyResults[questionId];
-      
-      rows.push([
-        uid,
-        cond,
-        method,
-        timestamp,
-        surveyId,
-        questionId,
-        value
-      ]);
-    }
+// 横持ちヘッダーを保証し、現在の完全なヘッダー配列を返す
+function ensureWideHeaders_(sheet, questionIds) {
+  var baseHeaders = ['UID','Condition','Method','Timestamp'];
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+
+  var currentHeaders = [];
+  if (lastRow >= 1 && lastCol >= 1) {
+    currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   }
-  
-  return rows;
+
+  if (currentHeaders.length === 0) {
+    // 初期作成: ベース + 今回の質問ID
+    var newHeaders = baseHeaders.concat(questionIds);
+    sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
+    styleHeader_(sheet, newHeaders.length);
+    return newHeaders;
+  }
+
+  // ベースヘッダーの不足を補完（既存のブックを安全に移行）
+  baseHeaders.forEach(function(h, idx){
+    if (currentHeaders[idx] !== h) {
+      // 先頭からベースヘッダーを強制整列
+      currentHeaders = baseHeaders.concat(currentHeaders.filter(function(x){ return baseHeaders.indexOf(x) === -1; }));
+      sheet.clearContents();
+      sheet.getRange(1, 1, 1, currentHeaders.length).setValues([currentHeaders]);
+      styleHeader_(sheet, currentHeaders.length);
+    }
+  });
+
+  // 新しい質問IDを末尾に追加
+  var appended = false;
+  questionIds.forEach(function(q){
+    if (currentHeaders.indexOf(q) === -1) {
+      currentHeaders.push(q);
+      appended = true;
+    }
+  });
+  if (appended) {
+    sheet.getRange(1, 1, 1, currentHeaders.length).setValues([currentHeaders]);
+    styleHeader_(sheet, currentHeaders.length);
+  }
+
+  return currentHeaders;
 }
 
 // スプレッドシートの初期設定
 function setupSpreadsheet() {
   var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
-  var sh = ss.getSheetByName('hummingbird-survey') || ss.insertSheet('hummingbird-survey');
-  
-  // ヘッダー行を設定
-  var headers = [
-    'UID',
-    'Condition', 
-    'Method',
-    'Timestamp',
-    'SurveyID',
-    'QuestionID',
-    'Value'
-  ];
-  
-  sh.getRange(1, 1, 1, headers.length).setValues([headers]);
-  
-  // ヘッダー行のスタイルを設定
-  sh.getRange(1, 1, 1, headers.length)
+  var sh = ss.getSheetByName('README') || ss.insertSheet('README');
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1,1).setValue('各サーベイID（例: nasa-tlx, sus）ごとに別シートに横持ち1行で保存されます。');
+  }
+}
+
+// ヘッダー行の設定（サーベイ個別シート用）
+function styleHeader_(sheet, numCols) {
+  sheet.getRange(1, 1, 1, numCols)
     .setFontWeight('bold')
     .setBackground('#f0f0f0');
 }
@@ -109,4 +152,11 @@ function testDoPost() {
   
   var result = doPost(mockEvent);
   Logger.log(result.getContent());
+  // 追加ログ: 各シートの最終行数を確認
+  var ss = SpreadsheetApp.openById('1yAWUlasKNCL0KYXhnG1PWg8e3hepjIl_-VPhgNE2azQ');
+  var sheets = ['nasa-tlx', 'sus'];
+  sheets.forEach(function(name){
+    var sh = ss.getSheetByName(name);
+    if (sh) Logger.log(name + ' rows: ' + sh.getLastRow());
+  });
 }
