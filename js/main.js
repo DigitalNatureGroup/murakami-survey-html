@@ -1,7 +1,7 @@
 console.log('ACTIVE main.js @', new Date().toISOString());
 // すべてのインポートを集約
 import { SurveyManager } from './survey-manager.js';
-import { SURVEY_SETS, GAS_ENDPOINT } from './survey-config.js';
+import { SURVEY_SETS, GAS_ENDPOINT, METHOD_CODE_MAP } from './survey-config.js';
 import { GASSender } from './gas-sender.js';
 
 // グローバル変数として設定（他のモジュールから参照可能にするため）
@@ -15,6 +15,7 @@ export class SurveyApp {
     constructor() {
         this.surveyManager = new SurveyManager();
         this.gasSender = new GASSender();
+        this.METHOD_CODE_MAP = METHOD_CODE_MAP;
         this.init();
     }
 
@@ -331,8 +332,13 @@ export class SurveyApp {
             const result = await this.gasSender.submitData(data);
             console.log('送信結果:', result);
 
-            // 成功メッセージを表示
-            this.showSuccess('結果が正常に送信されました。ご協力ありがとうございました。');
+            // 成功画面を表示（上: 成功文面 / 下: パスワード）
+            const isInterval = data.userInfo.condition === 'interval';
+            const msg = isInterval
+                ? '結果が正常に送信されました。'
+                : '結果が正常に送信されました。ご協力ありがとうございました。';
+            const code = isInterval ? (this.METHOD_CODE_MAP[data.userInfo.method] || '0000') : '';
+            this.showSuccess(msg, code);
 
             // ボタンを非表示
             submitBtn.style.display = 'none';
@@ -416,15 +422,26 @@ export class SurveyApp {
         console.log('送信履歴をクリアしました');
     }
 
-    // 成功メッセージを表示
-    showSuccess(message) {
+    // 成功メッセージを表示（下部に任意でパスワード表示）
+    showSuccess(message, code) {
         const container = document.getElementById('survey-container');
-        container.innerHTML = `
+        let html = `
             <div class="success">
                 <strong>完了:</strong> ${message}
             </div>
         `;
+        if (typeof code === 'string' && code.length > 0) {
+            html += `
+                <div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding:24px; text-align:center;">
+                    <div style="font-size:56px; font-weight:800; letter-spacing:8px; margin:8px 0 12px;">${code}</div>
+                    <div style="font-size:14px; color:#555;">この4桁のパスワードを次のシステムに入力してください</div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
     }
+
+    // showFinalScreen は未使用（レイアウト統一のため showSuccess に集約）
 }
 
 // アプリケーションを開始
