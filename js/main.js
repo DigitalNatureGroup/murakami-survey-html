@@ -335,7 +335,7 @@ export class SurveyApp {
             const isInterval = data.userInfo.task_state === 'interval';
             const msg = isInterval
                 ? '結果が正常に送信されました。'
-                : '結果が正常に送信されました。ご協力ありがとうございました。';
+                : '結果が正常に送信されました。ご協力ありがとうございました。実験実施者にお伝えください。';
             const code = isInterval ? (this.METHOD_CODE_MAP[data.userInfo.method] || '0000') : '';
             this.showSuccess(msg, code);
 
