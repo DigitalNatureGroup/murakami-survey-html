@@ -30,10 +30,13 @@ export class SurveyManager {
 
         // 条件に基づいてセットを決定
         let setKey;
+        let finalMethod = method; // デフォルトは元のmethod
+        
         if (task_state === 'interval') {
             setKey = 'set1';
         } else if (task_state === 'complete') {
             setKey = 'set2';
+            finalMethod = 'final'; // final surveyの場合はmethodを固定値に
         } else {
             throw new Error('無効な条件です');
         }
@@ -41,7 +44,7 @@ export class SurveyManager {
         this.userInfo = {
             uid: uid,
             task_state: task_state,
-            method: method,
+            method: finalMethod,
             setKey: setKey,
             group: group
         };

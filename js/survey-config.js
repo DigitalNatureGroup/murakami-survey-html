@@ -32,5 +32,5 @@ export const METHOD_CODE_MAP = {
     'manual': '1432',
     'bo': '2635',
     'glv_bo_hybrid': '3626',
-    'cma-es': '4559'
+    'cma-es': '4559',
 };
