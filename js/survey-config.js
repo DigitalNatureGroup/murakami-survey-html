@@ -3,6 +3,7 @@ import { nasaTlxSurvey } from '../surveys/nasa-tlx.js';
 import { susSurvey } from '../surveys/sus.js';
 import { originalSurvey } from '../surveys/original.js';
 import { lastSurvey } from '../surveys/last-survey.js';
+import { ueqShortSurvey } from '../surveys/ueq-short.js';
 
 // セット設定
 export const SURVEY_SETS = {
@@ -11,7 +12,8 @@ export const SURVEY_SETS = {
         surveys: [
             nasaTlxSurvey,
             susSurvey,
-            originalSurvey
+            originalSurvey,
+            ueqShortSurvey
         ]
     },
     "set2": {

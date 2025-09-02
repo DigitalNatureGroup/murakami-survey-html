@@ -222,6 +222,17 @@
             margin: 20px 0;
             border: 1px solid #c3e6cb;
         }
+        /* UEQ-Short */
+        .ueq-row { display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; gap:12px; padding:10px 0; border-top:1px solid #eee; }
+        .ueq-row:first-child { border-top:0; }
+        .ueq-left, .ueq-right { font-weight:600; }
+        .ueq-scale { display:flex; gap:14px; align-items:center; }
+        .ueq-scale input[type="radio"] { appearance:none; width:16px; height:16px; border:2px solid #666; border-radius:50%; display:inline-block; position:relative; }
+        .ueq-scale input[type="radio"]:checked { background:#333; }
+        /* クリック範囲拡大 */
+        .ueq-choice { display:inline-flex; align-items:center; justify-content:center; padding:6px; cursor:pointer; }
+        .ueq-choice input[type="radio"] { pointer-events:none; }
+        .ueq-help { font-size:12px; color:#666; margin:-6px 0 8px; }
     </style>
 </head>
 <body>

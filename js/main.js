@@ -104,8 +104,10 @@ export class SurveyApp {
     createQuestionHTML(question) {
         let html = `
             <div class="form-group">
-                <label for="${question.id}">${question.label}</label>
         `;
+        if (question.label) {
+            html += `<label for="${question.id}">${question.label}</label>`;
+        }
 
         if (question.description) {
             html += `<div class="description">${question.description}</div>`;
@@ -114,10 +116,29 @@ export class SurveyApp {
         if (question.type === 'range') {
             html += `
                 <div class="tlx-field" data-ticks="10">
-                    <label class="tlx-label" for="${question.id}">${question.label}</label>
                     <input id="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
                     <div class="tlx-ticks" aria-hidden="true"></div>
                     <div class="tlx-anchors"><span>${question.anchors[0]}</span><span>${question.anchors[1]}</span></div>
+                </div>
+            `;
+        } else if (question.type === 'ueq7') {
+            const name = question.id;
+            const radios = Array.from({ length: 7 }, (_, i) => {
+                const v = i + 1;
+                return `
+                    <label class="ueq-choice" for="${name}_${v}">
+                        <input type="radio" id="${name}_${v}" name="${name}" value="${v}" ${v === 1 && question.required ? 'required' : ''} />
+                    </label>
+                `;
+            }).join('');
+
+            html += `
+                <div class="ueq-row">
+                    <div class="ueq-left">${question.left}</div>
+                    <div class="ueq-scale" aria-label="${question.left} ～ ${question.right}">
+                        ${radios}
+                    </div>
+                    <div class="ueq-right" style="text-align:right">${question.right}</div>
                 </div>
             `;
         } else if (question.type === 'text') {
@@ -205,6 +226,16 @@ export class SurveyApp {
     // 送信処理
     async handleSubmit() {
         try {
+            // 未回答バリデーション（カスタム文言で案内）
+            const formEl = document.getElementById('survey-form');
+            if (formEl && !formEl.checkValidity()) {
+                alert('全ての質問に回答してください');
+                const firstInvalid = formEl.querySelector(':invalid');
+                if (firstInvalid && typeof firstInvalid.scrollIntoView === 'function') {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
             // 現在のサーベイの結果を収集
             const survey = this.surveyManager.getCurrentSurvey();
             const formData = this.collectFormData();
