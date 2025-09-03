@@ -3,6 +3,7 @@ console.log('ACTIVE main.js @', new Date().toISOString());
 import { SurveyManager } from './survey-manager.js';
 import { SURVEY_SETS, METHOD_CODE_MAP } from './survey-config.js';
 import { GASSender } from './gas-sender.js';
+import { LanguageManager } from './language-manager.js';
 
 // グローバル変数として設定（他のモジュールから参照可能にするため）
 window.SURVEY_SETS = SURVEY_SETS;
@@ -14,6 +15,7 @@ export class SurveyApp {
     constructor() {
         this.surveyManager = new SurveyManager();
         this.gasSender = new GASSender();
+        this.languageManager = new LanguageManager();
         this.METHOD_CODE_MAP = METHOD_CODE_MAP;
         this.init();
     }
@@ -24,6 +26,7 @@ export class SurveyApp {
             
             // URLパラメータを解析
             const userInfo = this.surveyManager.parseUserInfo();
+            this.userInfo = userInfo; // ユーザー情報を保存
             console.log('SurveyApp: ユーザー情報解析完了', userInfo);
             
             // ユーザー情報を表示
@@ -39,17 +42,50 @@ export class SurveyApp {
             // ボタンイベントを設定
             this.setupEventListeners();
             
+            // 言語変更イベントのリスナーを設定
+            this.setupLanguageEventListeners();
+            
         } catch (error) {
             console.error('SurveyApp: エラー発生', error);
             this.showError(error.message);
         }
     }
 
+    // 言語変更イベントのリスナーを設定
+    setupLanguageEventListeners() {
+        window.addEventListener('languageChanged', () => {
+            // 動的コンテンツの言語を更新
+            this.languageManager.updateDynamicContent();
+            
+            // 現在のアンケートを再表示（言語切り替え対応）
+            this.displayCurrentSurvey();
+            
+            // ボタンの表示/非表示を制御（言語変更後に再実行）
+            this.updateButtonVisibility();
+            
+            // ユーザー情報の表示を更新
+            if (this.userInfo) {
+                this.displayUserInfo(this.userInfo);
+            }
+        });
+    }
+
     // ユーザー情報を表示
     displayUserInfo(userInfo) {
         document.getElementById('uid-display').textContent = userInfo.uid;
-        document.getElementById('condition-display').textContent = userInfo.task_state;
-        document.getElementById('method-display').textContent = userInfo.method;
+        
+        // 条件の表示を多言語対応
+        const conditionText = userInfo.task_state === 'interval' 
+            ? (this.languageManager.getCurrentLanguage() === 'ja' ? '途中' : 'Interval')
+            : (this.languageManager.getCurrentLanguage() === 'ja' ? '完了' : 'Complete');
+        document.getElementById('condition-display').textContent = conditionText;
+        
+        // 手法の表示を多言語対応
+        const methodText = this.languageManager.getCurrentLanguage() === 'ja' 
+            ? userInfo.method 
+            : userInfo.method;
+        document.getElementById('method-display').textContent = methodText;
+        
         if (userInfo.task_state === 'complete') {
             const methodEl = document.getElementById('method-display');
             if (methodEl && methodEl.parentElement) {
@@ -63,19 +99,21 @@ export class SurveyApp {
     displayCurrentSurvey() {
         const survey = this.surveyManager.getCurrentSurvey();
         if (!survey) {
-            this.showError('サーベイが見つかりません');
+            this.showError(this.languageManager.getCurrentLanguage() === 'ja' ? 'サーベイが見つかりません' : 'Survey not found');
             return;
         }
 
         const container = document.getElementById('survey-container');
         const progress = this.surveyManager.getProgress();
+        const currentLang = this.languageManager.getCurrentLanguage();
 
         let html = `
             <div class="survey-item">
-                <div class="survey-title">
-                    ${survey.title} (${progress.current}/${progress.total})
+                <div class="survey-title" data-ja="${survey.title}" data-en="${survey.title_en || survey.title}">
+                    <span class="title-text">${currentLang === 'ja' ? survey.title : (survey.title_en || survey.title)}</span>
+                    <span class="progress-info"> (${progress.current}/${progress.total})</span>
                 </div>
-                <p>${survey.description}</p>
+                <p data-ja="${survey.description}" data-en="${survey.description_en || survey.description}">${currentLang === 'ja' ? survey.description : (survey.description_en || survey.description)}</p>
                 <form id="survey-form">
         `;
 
@@ -98,7 +136,7 @@ export class SurveyApp {
                 for (let i = 0; i <= divisions; i++) {
                     const tick = document.createElement('span');
                     tick.className = 'tick';
-                    ticksContainer.appendChild(tick);
+                    tick.appendChild(document.createTextNode(''));
                 }
             });
         })();
@@ -109,37 +147,52 @@ export class SurveyApp {
 
     // 質問のHTMLを生成
     createQuestionHTML(question) {
+        const currentLang = this.languageManager.getCurrentLanguage();
         let html = `
             <div class="form-group question-block">
         `;
+        
+        // ラベルの多言語対応（data属性付き）
         if (question.label) {
-            html += `<label for="${question.id}">${question.label}</label>`;
+            const labelText = currentLang === 'ja' ? question.label : (question.label_en || question.label);
+            html += `<label for="${question.id}" data-ja="${question.label}" data-en="${question.label_en || question.label}">${labelText}</label>`;
         }
 
+        // 説明の多言語対応（data属性付き）
         if (question.description) {
-            html += `<div class="description">${question.description}</div>`;
+            const descText = currentLang === 'ja' ? question.description : (question.description_en || question.description);
+            html += `<div class="description" data-ja="${question.description}" data-en="${question.description_en || question.description}">${descText}</div>`;
         }
 
         if (question.type === 'range') {
+            // アンカーの多言語対応
+            const anchors = currentLang === 'ja' ? question.anchors : (question.anchors_en || question.anchors);
             html += `
                 <div class="tlx-field" data-ticks="10">
                     <input id="${question.id}" name="${question.id}" class="tlx-range" type="range" min="${question.min}" max="${question.max}" step="1" value="${question.defaultValue}" ${question.required ? 'required' : ''}>
                     <div class="tlx-ticks" aria-hidden="true"></div>
-                    <div class="tlx-anchors"><span>${question.anchors[0]}</span><span>${question.anchors[1]}</span></div>
+                    <div class="tlx-anchors">
+                        <span data-ja="${question.anchors[0]}" data-en="${question.anchors_en ? question.anchors_en[0] : question.anchors[0]}">${anchors[0]}</span>
+                        <span data-ja="${question.anchors[1]}" data-en="${question.anchors_en ? question.anchors_en[1] : question.anchors[1]}">${anchors[1]}</span>
+                    </div>
                 </div>
             `;
         } else if (question.type === 'section') {
             const sid = `${question.id}-title`;
+            const titleText = currentLang === 'ja' ? (question.title || '') : (question.title_en || question.title || '');
+            const noteText = currentLang === 'ja' ? (question.note || '') : (question.note_en || question.note || '');
             html += `
                 <div class="survey-section" role="separator" aria-labelledby="${sid}">
                     <div class="section-bar">
-                        <h3 id="${sid}" class="section-title">${question.title ?? ''}</h3>
+                        <h3 id="${sid}" class="section-title" data-ja="${question.title || ''}" data-en="${question.title_en || question.title || ''}">${titleText}</h3>
                     </div>
-                    ${question.note ? `<p class="section-note">${question.note}</p>` : ''}
+                    ${noteText ? `<p class="section-note" data-ja="${question.note || ''}" data-en="${question.note_en || question.note || ''}">${noteText}</p>` : ''}
                 </div>
             `;
         } else if (question.type === 'ueq7') {
             const name = question.id;
+            const leftText = currentLang === 'ja' ? question.left : (question.left_en || question.left);
+            const rightText = currentLang === 'ja' ? question.right : (question.right_en || question.right);
             const radios = Array.from({ length: 7 }, (_, i) => {
                 const v = i + 1;
                 return `
@@ -151,18 +204,19 @@ export class SurveyApp {
 
             html += `
                 <div class="ueq-row">
-                    <div class="ueq-left">${question.left}</div>
-                    <div class="ueq-scale" aria-label="${question.left} ～ ${question.right}">
+                    <div class="ueq-left" data-ja="${question.left}" data-en="${question.left_en || question.left}">${leftText}</div>
+                    <div class="ueq-scale" aria-label="${leftText} ～ ${rightText}">
                         ${radios}
                     </div>
-                    <div class="ueq-right" style="text-align:right">${question.right}</div>
+                    <div class="ueq-right" style="text-align:right" data-ja="${question.right}" data-en="${question.right_en || question.right}">${rightText}</div>
                 </div>
             `;
         } else if (question.type === 'text') {
+            const placeholderText = currentLang === 'ja' ? (question.placeholder || '') : (question.placeholder_en || question.placeholder || '');
             html += `
                 <textarea id="${question.id}" 
                           name="${question.id}" 
-                          placeholder="${question.placeholder || ''}"
+                          placeholder="${placeholderText}"
                           rows="4" 
                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
                           ${question.required ? 'required' : ''}></textarea>
@@ -171,17 +225,20 @@ export class SurveyApp {
             // Likert汎用UI（5点法ドット＋テキスト）: 明示フラグ ui==='likert' のみで判定
             if (question.ui === 'likert') {
                 const name = question.id;
-                const radios = question.options.map((option, i) => `
-                    <label class="sus-dot" for="${name}_${option.value}">
-                        <input type="radio"
-                               id="${name}_${option.value}"
-                               name="${name}"
-                               value="${option.value}"
-                               ${i === 0 && question.required ? 'required' : ''}
-                               aria-label="${option.label}">
-                        <span class="sus-text">${option.label}</span>
-                    </label>
-                `).join('');
+                const radios = question.options.map((option, i) => {
+                    const optionLabel = currentLang === 'ja' ? option.label : (option.label_en || option.label);
+                    return `
+                        <label class="sus-dot" for="${name}_${option.value}">
+                            <input type="radio"
+                                   id="${name}_${option.value}"
+                                   name="${name}"
+                                   value="${option.value}"
+                                   ${i === 0 && question.required ? 'required' : ''}
+                                   aria-label="${optionLabel}">
+                            <span class="sus-text" data-ja="${option.label}" data-en="${option.label_en || option.label}">${optionLabel}</span>
+                        </label>
+                    `;
+                }).join('');
 
                 html += `
                     <div class="sus-scale" role="radiogroup" aria-label="SUS 1～5">
@@ -191,6 +248,7 @@ export class SurveyApp {
             } else {
                 html += `<div class="likert-group">`;
                 question.options.forEach((option, i) => {
+                    const optionLabel = currentLang === 'ja' ? option.label : (option.label_en || option.label);
                     html += `
                         <label class="likert-option" for="${question.id}_${option.value}">
                             <input type="radio"
@@ -198,7 +256,7 @@ export class SurveyApp {
                                    name="${question.id}"
                                    value="${option.value}"
                                    ${i === 0 && question.required ? 'required' : ''}>
-                            <span>${option.label}</span>
+                            <span data-ja="${option.label}" data-en="${option.label_en || option.label}">${optionLabel}</span>
                         </label>
                     `;
                 });
@@ -207,8 +265,9 @@ export class SurveyApp {
         } else if (question.type === 'select') {
             html += `<select id="${question.id}" name="${question.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
             question.options.forEach(option => {
+                const optionLabel = currentLang === 'ja' ? option.label : (option.label_en || option.label);
                 const selected = option.value === question.defaultValue ? 'selected' : '';
-                html += `<option value="${option.value}" ${selected}>${option.label}</option>`;
+                html += `<option value="${option.value}" ${selected} data-ja="${option.label}" data-en="${option.label_en || option.label}">${optionLabel}</option>`;
             });
             html += '</select>';
         }
@@ -234,10 +293,10 @@ export class SurveyApp {
         // 次へ/送信ボタン: 常に表示
         if (progress.current === progress.total) {
             submitBtn.style.display = 'inline-block';
-            submitBtn.textContent = '結果を送信';
+            submitBtn.textContent = this.languageManager.getCurrentLanguage() === 'ja' ? '結果を送信' : 'Submit Results';
         } else {
             submitBtn.style.display = 'inline-block';
-            submitBtn.textContent = '次へ';
+            submitBtn.textContent = this.languageManager.getCurrentLanguage() === 'ja' ? '次へ' : 'Next';
         }
 
         // リセットボタン: 常に表示
@@ -268,7 +327,10 @@ export class SurveyApp {
             // 未回答バリデーション（カスタム文言で案内）
             const formEl = document.getElementById('survey-form');
             if (formEl && !formEl.checkValidity()) {
-                alert('全ての質問に回答してください');
+                const alertMessage = this.languageManager.getCurrentLanguage() === 'ja' 
+                    ? '全ての質問に回答してください' 
+                    : 'Please answer all questions';
+                alert(alertMessage);
                 const firstInvalid = formEl.querySelector(':invalid');
                 if (firstInvalid && typeof firstInvalid.scrollIntoView === 'function') {
                     firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -333,9 +395,16 @@ export class SurveyApp {
 
             // 成功画面を表示（上: 成功文面 / 下: パスワード）
             const isInterval = data.userInfo.task_state === 'interval';
-            const msg = isInterval
-                ? '結果が正常に送信されました。'
-                : '結果が正常に送信されました。ご協力ありがとうございました。実験実施者にお伝えください。';
+            let msg;
+            if (this.languageManager.getCurrentLanguage() === 'ja') {
+                msg = isInterval
+                    ? '結果が正常に送信されました。'
+                    : '結果が正常に送信されました。ご協力ありがとうございました。実験実施者にお伝えください。';
+            } else {
+                msg = isInterval
+                    ? 'Results have been successfully submitted.'
+                    : 'Results have been successfully submitted. Thank you for your cooperation. Please inform the experiment conductor.';
+            }
             const code = isInterval ? (this.METHOD_CODE_MAP[data.userInfo.method] || '0000') : '';
             this.showSuccess(msg, code);
 
@@ -362,7 +431,10 @@ export class SurveyApp {
 
     // 戻る処理
     handleBack() {
-        if (confirm('前のサーベイに戻りますか？現在の入力は保存されません。')) {
+        const confirmMessage = this.languageManager.getCurrentLanguage() === 'ja' 
+            ? '前のサーベイに戻りますか？現在の入力は保存されません。' 
+            : 'Do you want to go back to the previous survey? Current input will not be saved.';
+        if (confirm(confirmMessage)) {
             // 前のサーベイに戻る
             this.surveyManager.previousSurvey();
             this.displayCurrentSurvey();
@@ -371,7 +443,10 @@ export class SurveyApp {
 
     // リセット処理
     handleReset() {
-        if (confirm('入力をリセットしてもよろしいですか？')) {
+        const confirmMessage = this.languageManager.getCurrentLanguage() === 'ja' 
+            ? '入力をリセットしてもよろしいですか？' 
+            : 'Are you sure you want to reset the input?';
+        if (confirm(confirmMessage)) {
             const form = document.getElementById('survey-form');
             form.reset();
         }
@@ -380,9 +455,10 @@ export class SurveyApp {
     // エラーメッセージを表示
     showError(message) {
         const container = document.getElementById('survey-container');
+        const errorLabel = this.languageManager.getCurrentLanguage() === 'ja' ? 'エラー:' : 'Error:';
         container.innerHTML = `
             <div class="error">
-                <strong>エラー:</strong> ${message}
+                <strong>${errorLabel}</strong> ${message}
             </div>
         `;
     }
@@ -424,18 +500,26 @@ export class SurveyApp {
     // 成功メッセージを表示（下部に任意でパスワード表示）
     showSuccess(message, code) {
         const container = document.getElementById('survey-container');
+        const completeLabel = this.languageManager.getCurrentLanguage() === 'ja' ? '完了:' : 'Complete:';
         let html = `
             <div class="success">
-                <strong>完了:</strong> ${message}
+                <strong>${completeLabel}</strong> ${message}
             </div>
         `;
         if (typeof code === 'string' && code.length > 0) {
+            const passwordText = this.languageManager.getCurrentLanguage() === 'ja' 
+                ? 'この4桁のパスワードを次のシステムに入力してください' 
+                : 'Please enter this 4-digit password in the next system';
+            const buttonText = this.languageManager.getCurrentLanguage() === 'ja' 
+                ? 'コピーしてタブを閉じる' 
+                : 'Copy and Close Tab';
+            
             html += `
                 <div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding:24px; text-align:center;">
                     <div style="font-size:56px; font-weight:800; letter-spacing:8px; margin:8px 0 12px;">${code}</div>
-                    <div style="font-size:14px; color:#555;">この4桁のパスワードを次のシステムに入力してください</div>
+                    <div style="font-size:14px; color:#555;">${passwordText}</div>
                     <button id="copy-and-close-btn" style="margin-top: 24px; padding: 16px 32px; font-size: 18px; font-weight: 600; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007bff'">
-                        コピーしてタブを閉じる
+                        ${buttonText}
                     </button>
                 </div>
             `;
@@ -461,7 +545,8 @@ export class SurveyApp {
                 // コピー成功のフィードバック
                 const btn = document.getElementById('copy-and-close-btn');
                 if (btn) {
-                    btn.textContent = 'コピー完了！';
+                    const copyCompleteText = this.languageManager.getCurrentLanguage() === 'ja' ? 'コピー完了！' : 'Copy Complete!';
+                    btn.textContent = copyCompleteText;
                     btn.style.backgroundColor = '#28a745';
                     btn.disabled = true;
                     
@@ -471,7 +556,8 @@ export class SurveyApp {
                         // window.close()が動作しない場合の代替手段
                         if (!window.closed) {
                             // ユーザーに手動で閉じるよう案内
-                            btn.textContent = 'タブを手動で閉じてください';
+                            const manualCloseText = this.languageManager.getCurrentLanguage() === 'ja' ? 'タブを手動で閉じてください' : 'Please close the tab manually';
+                            btn.textContent = manualCloseText;
                             btn.style.backgroundColor = '#6c757d';
                         }
                     }, 1000);
@@ -489,14 +575,16 @@ export class SurveyApp {
                 // 成功した場合と同じ処理
                 const btn = document.getElementById('copy-and-close-btn');
                 if (btn) {
-                    btn.textContent = 'コピー完了！';
+                    const copyCompleteText = this.languageManager.getCurrentLanguage() === 'ja' ? 'コピー完了！' : 'Copy Complete!';
+                    btn.textContent = copyCompleteText;
                     btn.style.backgroundColor = '#28a745';
                     btn.disabled = true;
                     
                     setTimeout(() => {
                         window.close();
                         if (!window.closed) {
-                            btn.textContent = 'タブを手動で閉じてください';
+                            const manualCloseText = this.languageManager.getCurrentLanguage() === 'ja' ? 'タブを手動で閉じてください' : 'Please close the tab manually';
+                            btn.textContent = manualCloseText;
                             btn.style.backgroundColor = '#6c757d';
                         }
                     }, 1000);
@@ -504,7 +592,8 @@ export class SurveyApp {
             });
         } catch (error) {
             console.error('エラーが発生しました:', error);
-            alert('エラーが発生しました: ' + error.message);
+            const errorMessage = this.languageManager.getCurrentLanguage() === 'ja' ? 'エラーが発生しました: ' : 'An error occurred: ';
+            alert(errorMessage + error.message);
         }
     }
 

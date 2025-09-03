@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survey System</title>
+    <title data-ja="Survey System" data-en="Survey System">Survey System</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -20,6 +20,82 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* 言語切り替えボタンのスタイル */
+        .language-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            min-width: 80px;
+        }
+        
+        .lang-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+        
+        .lang-btn:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+        }
+        
+        .lang-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* ダークテーマ対応 */
+        @media (prefers-color-scheme: dark) {
+            .lang-btn {
+                background: #2d3748;
+                color: #63b3ed;
+                border-color: #63b3ed;
+            }
+            
+            .lang-btn.active {
+                background: #63b3ed;
+                color: #2d3748;
+            }
+            
+            .lang-btn:hover {
+                background: #63b3ed;
+                color: #2d3748;
+            }
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .language-toggle {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                gap: 5px;
+            }
+            
+            .lang-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-width: 60px;
+            }
         }
         
         .header {
@@ -269,38 +345,44 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Survey System</h1>
-            <p>実験参加者の方へ：以下の質問にお答えください</p>
+        <!-- 言語切り替えボタン -->
+        <div class="language-toggle">
+            <button class="lang-btn active" data-lang="ja">日本語</button>
+            <button class="lang-btn" data-lang="en">English</button>
         </div>
         
-        <div class="warning-panel">
+        <div class="header">
+            <h1 data-ja="アンケートシステム" data-en="Survey System">アンケートシステム</h1>
+            <p data-ja="実験参加者の方へ：以下の質問にお答えください" data-en="To experiment participants: Please answer the following questions">実験参加者の方へ：以下の質問にお答えください</p>
+        </div>
+        
+        <div class="warning-panel" data-ja="⚠️ リロードするとアンケートが初めからになります。" data-en="⚠️ Reloading will restart the survey from the beginning.">
             ⚠️ リロードするとアンケートが初めからになります。
         </div>
         
         <div class="info-panel">
             <div class="info-item">
-                <span class="info-label">参加者ID:</span>
+                <span class="info-label" data-ja="参加者ID:" data-en="Participant ID:">参加者ID:</span>
                 <span class="info-value" id="uid-display">-</span>
             </div>
             <div class="info-item">
-                <span class="info-label">条件:</span>
+                <span class="info-label" data-ja="条件:" data-en="Condition:">条件:</span>
                 <span class="info-value" id="condition-display">-</span>
             </div>
             <div class="info-item">
-                <span class="info-label">手法:</span>
+                <span class="info-label" data-ja="手法:" data-en="Method:">手法:</span>
                 <span class="info-value" id="method-display">-</span>
             </div>
         </div>
         
         <div id="survey-container" class="survey-container">
-            <div class="loading">読み込み中...</div>
+            <div class="loading" data-ja="読み込み中..." data-en="Loading...">読み込み中...</div>
         </div>
         
         <div class="buttons">
-            <button class="btn btn-secondary" id="back-btn" style="display: none;">戻る</button>
-            <button class="btn btn-primary" id="submit-btn" style="display: none;">結果を送信</button>
-            <button class="btn btn-secondary" id="reset-btn" style="display: none;">リセット</button>
+            <button class="btn btn-secondary" id="back-btn" style="display: none;" data-ja="戻る" data-en="Back">戻る</button>
+            <button class="btn btn-primary" id="submit-btn" style="display: none;" data-ja="結果を送信" data-en="Submit Results">結果を送信</button>
+            <button class="btn btn-secondary" id="reset-btn" style="display: none;" data-ja="リセット" data-en="Reset">リセット</button>
         </div>
     </div>
 

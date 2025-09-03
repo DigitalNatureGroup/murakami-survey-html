@@ -9,6 +9,7 @@ import { ueqShortSurvey } from '../surveys/ueq-short.js';
 export const SURVEY_SETS = {
     "set1": {
         name: "セット1",
+        name_en: "Set 1",
         surveys: [
             ueqShortSurvey,
             susSurvey,
@@ -18,6 +19,7 @@ export const SURVEY_SETS = {
     },
     "set2": {
         name: "セット2",
+        name_en: "Set 2",
         surveys: [
             lastSurvey
         ]
