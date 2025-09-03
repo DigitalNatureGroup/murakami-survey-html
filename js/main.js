@@ -80,10 +80,15 @@ export class SurveyApp {
             : (this.languageManager.getCurrentLanguage() === 'ja' ? '完了' : 'Complete');
         document.getElementById('condition-display').textContent = conditionText;
         
-        // 手法の表示を多言語対応
-        const methodText = this.languageManager.getCurrentLanguage() === 'ja' 
-            ? userInfo.method 
-            : userInfo.method;
+        // 手法の表示を絵文字付きに変更
+        const methodMap = {
+            'glv_bo_hybrid': '🐬 イルカ',
+            'cma-es': '🦉 フクロウ',
+            'bo': '🐎 ウマ',
+            'manual': '🐤 ヒヨコ'
+        };
+        
+        const methodText = methodMap[userInfo.method] || userInfo.method;
         document.getElementById('method-display').textContent = methodText;
         
         if (userInfo.task_state === 'complete') {
