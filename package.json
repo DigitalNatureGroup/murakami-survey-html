@@ -11,13 +11,17 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "node-fetch": "^3.3.2",
-    "dotenv": "^16.3.1"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
   },
-  "keywords": ["survey", "nasa-tlx", "html", "javascript"],
+  "keywords": [
+    "survey",
+    "nasa-tlx",
+    "html",
+    "javascript"
+  ],
   "author": "",
   "license": "MIT"
 }
