@@ -25,8 +25,8 @@ export const originalSurvey = {
             type: "radio", 
             ui: "likert", 
             required: true, 
-            label: "2.私は、システムに振り回されていると感じました。（逆転）",
-            label_en: "2. I felt that I was being controlled by the system. (Reversed)",
+            label: "2.私は、システムに振り回されていると感じました。",
+            label_en: "2. I felt that I was being controlled by the system.",
             options: [1,2,3,4,5].map(v => ({ 
                 value: String(v), 
                 label: ["全くそう思わない","あまりそう思わない","どちらともいえない","ややそう思う","強くそう思う"][v-1],
@@ -38,8 +38,8 @@ export const originalSurvey = {
             type: "radio", 
             ui: "likert", 
             required: true, 
-            label: "3.私の行動の結果が、意図した通りに論理的に繋がっていると感じられませんでした。（逆転）",
-            label_en: "3. I did not feel that the results of my actions were logically connected as intended. (Reversed)",
+            label: "3.私の行動の結果が、意図した通りに論理的に繋がっていると感じられませんでした。",
+            label_en: "3. I did not feel that the results of my actions were logically connected as intended.",
             options: [1,2,3,4,5].map(v => ({ 
                 value: String(v), 
                 label: ["全くそう思わない","あまりそう思わない","どちらともいえない","ややそう思う","強くそう思う"][v-1],

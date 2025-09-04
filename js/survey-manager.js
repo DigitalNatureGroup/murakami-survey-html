@@ -31,6 +31,20 @@ export class SurveyManager {
         // 条件に基づいてセットを決定
         let setKey;
         let finalMethod = method; // デフォルトは元のmethod
+
+        // method の表記揺れを正規化（URLで cma などの別名が来た場合に統一）
+        const methodAliases = {
+            'cma': 'cma-es',
+            'cmaes': 'cma-es',
+            'cma_es': 'cma-es',
+            'glv-bo': 'glv_bo_hybrid',
+            'glvbo': 'glv_bo_hybrid',
+            'standard-bo': 'bo',
+            'standard_bo': 'bo'
+        };
+        if (Object.prototype.hasOwnProperty.call(methodAliases, finalMethod)) {
+            finalMethod = methodAliases[finalMethod];
+        }
         
         if (task_state === 'interval') {
             setKey = 'set1';
