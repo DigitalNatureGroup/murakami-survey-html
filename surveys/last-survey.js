@@ -18,14 +18,14 @@ export const lastSurvey = {
       {
         id: "q1_best_method",
         type: "radio",
-        label: "4つの手法（gLV→BO, CMA-ES, 標準BO, 手動）の中で、最も使いやすかったのはどれですか？",
-        label_en: "Among the four methods (gLV→BO, CMA-ES, Standard BO, Manual), which was the most user-friendly?",
+        label: "4つの手法（🐬 イルカ, 🦉 フクロウ, 🐎 ウマ, 🐤 ヒヨコ）の中で、最も使いやすかったのはどれですか？",
+        label_en: "Among the four methods (🐬 Dolphin, 🦉 Owl, 🐎 Horse, 🐤 Chick), which was the most user-friendly?",
         required: true,
         options: [
-          { value: "glv-bo", label: "gLV→BO", label_en: "gLV→BO" },
-          { value: "cma-es", label: "CMA-ES", label_en: "CMA-ES" },
-          { value: "standard-bo", label: "標準BO", label_en: "Standard BO" },
-          { value: "manual", label: "手動", label_en: "Manual" },
+          { value: "glv-bo", label: "🐬 イルカ", label_en: "🐬 Dolphin" },
+          { value: "cma-es", label: "🦉 フクロウ", label_en: "🦉 Owl" },
+          { value: "standard-bo", label: "🐎 ウマ", label_en: "🐎 Horse" },
+          { value: "manual", label: "🐤 ヒヨコ", label_en: "🐤 Chick" },
         ]
       },
       {
@@ -35,10 +35,10 @@ export const lastSurvey = {
         label_en: "Conversely, which one did you find most difficult to use?",
         required: true,
         options: [
-          { value: "glv-bo", label: "gLV→BO", label_en: "gLV→BO" },
-          { value: "cma-es", label: "CMA-ES", label_en: "CMA-ES" },
-          { value: "standard-bo", label: "標準BO", label_en: "Standard BO" },
-          { value: "manual", label: "手動", label_en: "Manual" },
+          { value: "glv-bo", label: "🐬 イルカ", label_en: "🐬 Dolphin" },
+          { value: "cma-es", label: "🦉 フクロウ", label_en: "🦉 Owl" },
+          { value: "standard-bo", label: "🐎 ウマ", label_en: "🐎 Horse" },
+          { value: "manual", label: "🐤 ヒヨコ", label_en: "🐤 Chick" },
         ]
       },
       {
@@ -46,46 +46,6 @@ export const lastSurvey = {
         type: "text",
         label: "その理由を具体的に教えてください。",
         label_en: "Please tell us the specific reason.",
-        required: true
-      },
-  
-      // 2. 探索プロセスと主体性
-      { 
-        id: "sec_agency", 
-        type: "section", 
-        title: "【探索プロセスと主体性】", 
-        title_en: "【Exploration Process and Agency】",
-        note: "どのように操作方針を決めたか、主体性の観点でうかがいます。",
-        note_en: "We will ask about how you decided on your operation policy from the perspective of agency."
-      },
-      {
-        id: "q4_metaphor",
-        type: "radio",
-        label: "各手法は「カーナビ」か「探検隊」に例えるとどちらに近いと感じましたか？（代表的に1つ選んでください）",
-        label_en: "If you compare each method to either a 'GPS navigation' or an 'exploration team', which did you feel was closer? (Please choose one representative example)",
-        required: true,
-        options: [
-          { value: "nav", label: "カーナビ（案内してくれる）", label_en: "GPS navigation (guides you)" },
-          { value: "explorer", label: "探検隊（未知を探索する）", label_en: "Exploration team (explores the unknown)" }
-        ]
-      },
-      {
-        id: "q5_glvbo_agency",
-        type: "radio",
-        label: "gLV→BOは「探検隊を導く手綱」としてうまく機能したと思いますか？",
-        label_en: "Do you think gLV→BO functioned well as a 'rein to guide the exploration team'?",
-        required: true,
-        options: [
-          { value: "worked", label: "うまく機能した", label_en: "It functioned well" },
-          { value: "neutral", label: "どちらともいえない", label_en: "Neither agree nor disagree" },
-          { value: "not_worked", label: "システムに振り回された", label_en: "I was controlled by the system" }
-        ]
-      },
-      {
-        id: "q6_process",
-        type: "text",
-        label: "AIから提案を受けた後、どのように次の操作を決めましたか？思考のプロセスを教えてください。",
-        label_en: "After receiving suggestions from AI, how did you decide on the next operation? Please tell us about your thought process.",
         required: true
       },
   
@@ -135,19 +95,6 @@ export const lastSurvey = {
         label: "逆に「役に立たない」「意図を理解していない」と感じたのはどんな時でしたか？",
         label_en: "Conversely, when did you feel that they were 'not useful' or 'did not understand the intention'?",
         required: true
-      },
-      {
-        id: "q11_glvbo_trust",
-        type: "radio",
-        label: "gLV→BO のカオス的な振る舞いをどの程度信頼できましたか？",
-        label_en: "To what extent could you trust the chaotic behavior of gLV→BO?",
-        required: true,
-        options: [
-          { value: "high", label: "とても信頼できた", label_en: "I could trust it very much" },
-          { value: "medium", label: "ある程度信頼できた", label_en: "I could trust it to some extent" },
-          { value: "low", label: "あまり信頼できなかった", label_en: "I couldn't trust it much" },
-          { value: "none", label: "全く信頼できなかった", label_en: "I couldn't trust it at all" }
-        ]
       },
   
       // 5. 改善提案
