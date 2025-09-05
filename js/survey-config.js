@@ -2,6 +2,7 @@
 import { nasaTlxSurvey } from '../surveys/nasa-tlx.js';
 import { susSurvey } from '../surveys/sus.js';
 import { originalSurvey } from '../surveys/original.js';
+import { manualOriginalSurvey } from '../surveys/manual-original.js';
 import { lastSurvey } from '../surveys/last-survey.js';
 import { ueqShortSurvey } from '../surveys/ueq-short.js';
 
@@ -22,6 +23,16 @@ export const SURVEY_SETS = {
         name_en: "Set 2",
         surveys: [
             lastSurvey
+        ]
+    },
+    "set3": {
+        name: "セット3",
+        name_en: "Set 3",
+        surveys: [
+            ueqShortSurvey,
+            susSurvey,
+            nasaTlxSurvey,
+            manualOriginalSurvey
         ]
     }
 };

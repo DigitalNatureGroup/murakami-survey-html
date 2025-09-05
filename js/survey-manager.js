@@ -47,7 +47,12 @@ export class SurveyManager {
         }
         
         if (task_state === 'interval') {
-            setKey = 'set1';
+            // method=manualの場合はセット3を使用
+            if (finalMethod === 'manual') {
+                setKey = 'set3';
+            } else {
+                setKey = 'set1';
+            }
         } else if (task_state === 'complete') {
             setKey = 'set2';
             finalMethod = 'final'; // final surveyの場合はmethodを固定値に
