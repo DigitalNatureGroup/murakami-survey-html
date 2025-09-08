@@ -4,7 +4,10 @@ import { susSurvey } from '../surveys/sus.js';
 import { originalSurvey } from '../surveys/original.js';
 import { manualOriginalSurvey } from '../surveys/manual-original.js';
 import { lastSurvey } from '../surveys/last-survey.js';
+import { lastSurvey2 } from '../surveys/last-surveys-2.js';
 import { ueqShortSurvey } from '../surveys/ueq-short.js';
+import { originalSurvey2 } from '../surveys/original-2.js';
+import { manualOriginalSurvey2 } from '../surveys/manual-original-2.js';
 
 // セット設定
 export const SURVEY_SETS = {
@@ -33,6 +36,33 @@ export const SURVEY_SETS = {
             susSurvey,
             nasaTlxSurvey,
             manualOriginalSurvey
+        ]
+    },
+    "set4": {
+        name: "セット4",
+        name_en: "Set 4",
+        surveys: [
+            ueqShortSurvey,
+            susSurvey,
+            nasaTlxSurvey,
+            originalSurvey2
+        ]
+    },
+    "set5": {
+        name: "セット5",
+        name_en: "Set 5",
+        surveys: [
+            lastSurvey2
+        ]
+    },
+    "set6": {
+        name: "セット6",
+        name_en: "Set 6",
+        surveys: [
+            ueqShortSurvey,
+            susSurvey,
+            nasaTlxSurvey,
+            manualOriginalSurvey2
         ]
     }
 };

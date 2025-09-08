@@ -54,12 +54,39 @@ npm run static
 サーベイにアクセスする際は以下のURLパラメータを指定してください：
 
 - `uid`: ユーザーID（数字）
-- `condition`: 条件（"interval" または "finish"）
-- `method`: 手法（"manual", "humbird", "bo", "cma"）
+- `task_state`: タスク状態（"interval" または "complete"）
+- `method`: 手法（"manual", "glv-bo", "standard-bo", "cma-es"）
+- `group`: グループ（"mario" または "design"）
 
-例：
+**手法の対応関係：**
+- `manual`: 🐤 ヒヨコ（手動）
+- `glv-bo`: 🐬 イルカ（GLV-BO）
+- `standard-bo`: 🐎 ウマ（Standard BO）
+- `cma-es`: 🦉 フクロウ（CMA-ES）- 現在は使用されていません
+
+**グループの説明：**
+- `mario`: マリオグループ（従来のサーベイセット）
+- `design`: デザイングループ（新しいサーベイセット）
+
+**テスト用の例：**
 ```
-http://localhost:3000/?uid=123&condition=interval&method=manual
+# マリオグループ - 手動手法でのテスト
+http://localhost:3000/?uid=123&task_state=interval&method=manual&group=mario
+
+# マリオグループ - イルカ手法でのテスト
+http://localhost:3000/?uid=123&task_state=interval&method=glv-bo&group=mario
+
+# マリオグループ - ウマ手法でのテスト
+http://localhost:3000/?uid=123&task_state=interval&method=standard-bo&group=mario
+
+# マリオグループ - 最終サーベイのテスト
+http://localhost:3000/?uid=123&task_state=complete&method=manual&group=mario
+
+# デザイングループ - 中間サーベイのテスト
+http://localhost:3000/?uid=123&task_state=interval&method=manual&group=design
+
+# デザイングループ - 最終サーベイのテスト
+http://localhost:3000/?uid=123&task_state=complete&method=manual&group=design
 ```
 
 ### サーベイセット

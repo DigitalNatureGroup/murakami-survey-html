@@ -47,14 +47,30 @@ export class SurveyManager {
         }
         
         if (task_state === 'interval') {
-            // method=manualの場合はセット3を使用
-            if (finalMethod === 'manual') {
-                setKey = 'set3';
-            } else {
-                setKey = 'set1';
+            // 中間サーベイの条件分岐
+            if (group === 'design') {
+                // designグループの場合
+                if (finalMethod === 'manual') {
+                    setKey = 'set6'; // design + manual
+                    console.log('design + manual');
+                } else {
+                    setKey = 'set4'; // design + その他の手法
+                }
+            } else if (group === 'mario') {
+                // marioグループの場合
+                if (finalMethod === 'manual') {
+                    setKey = 'set3'; // mario + manual
+                } else {
+                    setKey = 'set1'; // mario + その他の手法
+                }
             }
         } else if (task_state === 'complete') {
-            setKey = 'set2';
+            // 最終サーベイの条件分岐
+            if (group === 'design') {
+                setKey = 'set5'; // designグループの最終サーベイ
+            } else if (group === 'mario') {
+                setKey = 'set2'; // marioグループの最終サーベイ
+            }
             finalMethod = 'final'; // final surveyの場合はmethodを固定値に
         } else {
             throw new Error('無効な条件です');
