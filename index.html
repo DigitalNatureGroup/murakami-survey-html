@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-ja="Survey System" data-en="Survey System">Survey System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* 言語切り替えボタンのスタイル */
+        .language-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            min-width: 80px;
+        }
+        
+        .lang-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+        
+        .lang-btn:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+        }
+        
+        .lang-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* ダークテーマ対応 */
+        @media (prefers-color-scheme: dark) {
+            .lang-btn {
+                background: #2d3748;
+                color: #63b3ed;
+                border-color: #63b3ed;
+            }
+            
+            .lang-btn.active {
+                background: #63b3ed;
+                color: #2d3748;
+            }
+            
+            .lang-btn:hover {
+                background: #63b3ed;
+                color: #2d3748;
+            }
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .language-toggle {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                gap: 5px;
+            }
+            
+            .lang-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-width: 60px;
+            }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        
+        .warning-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .info-item {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        
+        .info-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .survey-container {
+            margin-top: 30px;
+        }
+        
+        .survey-item {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .survey-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group .description {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+        /* TLX simple ticks layer */
+        .tlx-field{margin:16px 0}
+        .tlx-label{display:block;margin-bottom:8px}
+        .tlx-range{width:100%}
+        .tlx-ticks{
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 0;
+            margin-top: 8px;
+            padding: 0 2px;
+            height: 10px;
+        }
+        .tlx-ticks::before{
+            content:"";
+            position:absolute;
+            left:0; right:0; top:50%;
+            height:2px; background:#d0d0d0;
+            transform: translateY(-50%);
+        }
+        .tlx-ticks .tick{ width:1px; height:8px; background:#888; align-self:center; }
+        .tlx-anchors{display:flex;justify-content:space-between;font-size:12px;margin-top:6px}
+        
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+        /* UEQ-Short */
+        .ueq-row { display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; gap:12px; padding:10px 0; border-top:1px solid #eee; }
+        .ueq-row:first-child { border-top:0; }
+        .ueq-left, .ueq-right { font-weight:600; }
+        .ueq-scale { display:flex; gap:14px; align-items:center; }
+        .ueq-scale input[type="radio"] { appearance:none; width:16px; height:16px; border:2px solid #666; border-radius:50%; display:inline-block; position:relative; }
+        .ueq-scale input[type="radio"]:checked { background:#333; }
+        /* クリック範囲拡大 */
+        .ueq-choice { display:inline-flex; align-items:center; justify-content:center; padding:6px; cursor:pointer; }
+        .ueq-choice input[type="radio"] { pointer-events:none; }
+        .ueq-help { font-size:12px; color:#666; margin:-6px 0 8px; }
+        /* SUS用 Likert 横並び（クリック面拡大） */
+        .likert-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .likert-option { display:inline-flex; align-items:center; justify-content:center; min-width: 44px; min-height: 36px; padding: 6px 10px; border:1px solid #ccc; border-radius:6px; cursor:pointer; }
+        .likert-option input[type="radio"] { appearance:none; width:14px; height:14px; border:2px solid #666; border-radius:50%; margin-right:8px; pointer-events:none; }
+        .likert-option input[type="radio"]:checked { background:#333; border-color:#333; }
+        .likert-option:hover { background:#f6f6f6; }
+        /* SUS 5点法: ドット + 説明 */
+        .sus-scale { display:flex; gap:14px; align-items:center; margin-top:8px; }
+        .sus-dot { display:inline-flex; align-items:center; justify-content:center; padding:6px; cursor:pointer; }
+        .sus-dot input[type="radio"] { appearance:none; width:14px; height:14px; border:2px solid #666; border-radius:50%; pointer-events:none; margin-right:8px; }
+        .sus-text { font-size:12px; color:#555; }
+        .sus-dot input[type="radio"]:checked { background:#333; border-color:#333; }
+        .sus-anchors { font-size:12px; color:#666; margin-top:6px; }
+        /* セクション見出し */
+        .survey-section { margin: 28px 0 14px; }
+        .section-bar { background: #f2f3f5; border: 1px solid #e3e5e8; border-radius: 8px; padding: 10px 14px; }
+        .section-title { margin: 0; font-size: 16px; font-weight: 700; color: #222; }
+        .section-note { margin: 6px 2px 0; font-size: 13px; color: #666; }
+        .survey-section + .question-block { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 言語切り替えボタン -->
+        <div class="language-toggle">
+            <button class="lang-btn active" data-lang="ja">日本語</button>
+            <button class="lang-btn" data-lang="en">English</button>
+        </div>
+        
+        <div class="header">
+            <h1 data-ja="アンケートシステム" data-en="Survey System">アンケートシステム</h1>
+            <p data-ja="実験参加者の方へ：以下の質問にお答えください" data-en="To experiment participants: Please answer the following questions">実験参加者の方へ：以下の質問にお答えください</p>
+        </div>
+        
+        <div class="warning-panel" data-ja="⚠️ リロードするとアンケートが初めからになります。" data-en="⚠️ Reloading will restart the survey from the beginning.">
+            ⚠️ リロードするとアンケートが初めからになります。
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-item">
+                <span class="info-label" data-ja="参加者ID:" data-en="Participant ID:">参加者ID:</span>
+                <span class="info-value" id="uid-display">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label" data-ja="条件:" data-en="Condition:">条件:</span>
+                <span class="info-value" id="condition-display">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label" data-ja="手法:" data-en="Method:">手法:</span>
+                <span class="info-value" id="method-display">-</span>
+            </div>
+        </div>
+        
+        <div id="survey-container" class="survey-container">
+            <div class="loading" data-ja="読み込み中..." data-en="Loading...">読み込み中...</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-secondary" id="back-btn" style="display: none;" data-ja="戻る" data-en="Back">戻る</button>
+            <button class="btn btn-primary" id="submit-btn" style="display: none;" data-ja="結果を送信" data-en="Submit Results">結果を送信</button>
+            <button class="btn btn-secondary" id="reset-btn" style="display: none;" data-ja="リセット" data-en="Reset">リセット</button>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
